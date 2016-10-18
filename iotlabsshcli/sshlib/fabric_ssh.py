@@ -54,7 +54,7 @@ class Ssh(iotlabsshcli.sshlib.SshAPI):
         return fabric.api.put(*args, **kwargs)
 
     def run(self, command, hosts=None):
-        """Run a ssh command using fabric."""
+        """Run ssh command using fabric."""
         return fabric.api.execute(self._run, command, hosts=hosts)
 
     def scp(self, src, dst, hosts=None):

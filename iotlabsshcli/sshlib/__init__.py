@@ -22,4 +22,5 @@
 
 
 class SshAPI(object):
+    """Ssh API base class."""
     pass

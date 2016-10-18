@@ -39,7 +39,9 @@ def _sites_from_nodes(nodes):
     return sorted(list(sites))
 
 
+_MKDIR_DST_CMD = 'mkdir -p {0}'
 _UPDATE_M3_CMD = 'flash_a8_m3 {0}'
+_RESET_M3_CMD = 'reset_a8_m3'
 
 
 def update_m3(config_ssh, nodes, firmware):
@@ -47,9 +49,13 @@ def update_m3(config_ssh, nodes, firmware):
     results = []
 
     # Configure ssh and remote firmware names.
-    sites = _sites_from_nodes(nodes)
-    remote_fw = os.path.join('~/A8', os.path.basename(firmware))
     ssh = Ssh(config_ssh)
+    sites = _sites_from_nodes(nodes)
+    remote_fw = os.path.join('~/A8/.iotlabsshcli', os.path.basename(firmware))
+
+    # Create firmware destination directory
+    result = ssh.run(_MKDIR_DST_CMD.format(os.path.dirname(remote_fw)),
+                     hosts=sites)
 
     # Copy firmware on sites.
     result = ssh.scp(firmware, remote_fw, hosts=sites)
@@ -58,5 +64,19 @@ def update_m3(config_ssh, nodes, firmware):
     # Run firmware update.
     result = ssh.run(_UPDATE_M3_CMD.format(remote_fw), hosts=nodes)
     results.append({'update-m3': result})
+
+    return results
+
+
+def reset_m3(config_ssh, nodes):
+    """Reset the M3 of open A8 nodes."""
+    results = []
+
+    # Configure ssh.
+    ssh = Ssh(config_ssh)
+
+    # Run M3 reset command.
+    result = ssh.run(_RESET_M3_CMD, hosts=nodes)
+    results.append({'reset-m3': result})
 
     return results

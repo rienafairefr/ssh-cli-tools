@@ -21,6 +21,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 
+import sys
 import argparse
 from iotlabcli import auth
 from iotlabcli import helpers
@@ -42,13 +43,19 @@ def parse_options():
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True  # needed for python 3.
 
+    # update-m3 parser
     update_parser = subparsers.add_parser('update-m3',
                                           help='update the M3 firmware of A8 '
                                                'node')
     update_parser.add_argument('firmware', help='firmware elf path.')
-
     # nodes list or exclude list
     common.add_nodes_selection_list(update_parser)
+
+    # reset-m3 parser
+    reset_parser = subparsers.add_parser('reset-m3',
+                                         help='reset the M3 of A8 node')
+    # nodes list or exclude list
+    common.add_nodes_selection_list(reset_parser)
 
     return parser
 
@@ -58,9 +65,6 @@ def open_a8_parse_and_run(opts):
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
     exp_id = helpers.get_current_experiment(api, opts.experiment_id)
-
-    command = opts.command
-    assert command == 'update-m3'
 
     config_ssh = {
         'user': user,
@@ -73,10 +77,17 @@ def open_a8_parse_and_run(opts):
     # TODO: filter only a8 nodes
     nodes = ["root@node-{0}".format(node) for node in nodes]
 
-    return iotlabsshcli.open_a8.update_m3(config_ssh, nodes, opts.firmware)
+    command = opts.command
+    if command == 'reset-m3':
+        return iotlabsshcli.open_a8.reset_m3(config_ssh, nodes)
+    elif command == 'update-m3':
+        return iotlabsshcli.open_a8.update_m3(config_ssh, nodes, opts.firmware)
+    else:  # pragma: no cover
+        raise ValueError('Unknown command {0}'.format(command))
 
 
-def main():
+def main(args=None):
     """Open A8 SSH cli parser."""
+    args = args or sys.argv[1:]  # required for easy testing.
     parser = parse_options()
-    common.main_cli(open_a8_parse_and_run, parser)
+    common.main_cli(open_a8_parse_and_run, parser, args)
