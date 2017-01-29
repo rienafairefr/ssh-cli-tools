@@ -21,23 +21,26 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 from __future__ import print_function
+
 import os.path
+
+from collections import OrderedDict
 from iotlabsshcli.sshlib import OpenA8Ssh
 
 
 def _nodes_grouped(nodes):
     """Group nodes per site from a list of nodes.
-    >>> _sites_from_nodes([])
-    []
-    >>> _sites_from_nodes(['node-a8-1.grenoble.iot-lab.info',
-    ...                    'node-a8-2.grenoble.iot-lab.info',
-    ...                    'node-a8-2.saclay.iot-lab.info',
-    ...                    'node-a8-2.lille.iot-lab.info'])
-    {'grenoble': ['node-a8-1', 'node-a8-2'],
-    ...           'lille': ['node-a8-2'],
-    ...           'saclay': ['node-a8-2']}
+    >>> _nodes_grouped([])
+    OrderedDict()
+    >>> _nodes_grouped(['node-a8-1.grenoble.iot-lab.info',
+    ...                 'node-a8-2.grenoble.iot-lab.info',
+    ...                 'node-a8-2.saclay.iot-lab.info',
+    ...                 'node-a8-2.lille.iot-lab.info'])
+    ... # doctest: +NORMALIZE_WHITESPACE
+    OrderedDict([('grenoble', ['node-a8-1', 'node-a8-2']),
+    ('saclay', ['node-a8-2']), ('lille', ['node-a8-2'])])
     """
-    result = {}
+    result = OrderedDict()
     for host in nodes:
         node = host.split('.')[0]
         site = host.split('.')[1]
@@ -45,6 +48,7 @@ def _nodes_grouped(nodes):
             result.update({site: [node]})
         else:
             result[site].append(node)
+
     return result
 
 
@@ -53,13 +57,11 @@ _UPDATE_M3_CMD = 'source /etc/profile && /usr/bin/flash_a8_m3 {}'
 _RESET_M3_CMD = 'source /etc/profile && /usr/bin/reset_a8_m3'
 
 
-def update_m3(config_ssh, nodes, firmware):
-    """Update the firmware of M3 of open A8 nodes."""
-    results = []
-
+def flash_m3(config_ssh, nodes, firmware, verbose=False):
+    """Flash the firmware of M3 of open A8 nodes."""
     # Configure ssh and remote firmware names.
     groups = _nodes_grouped(nodes)
-    ssh = OpenA8Ssh(config_ssh, groups=groups)
+    ssh = OpenA8Ssh(config_ssh, groups, verbose=verbose)
     remote_fw = os.path.join('~/A8/.iotlabsshcli', os.path.basename(firmware))
 
     # Create firmware destination directory
@@ -69,20 +71,31 @@ def update_m3(config_ssh, nodes, firmware):
     ssh.scp(firmware, remote_fw)
 
     # Run firmware update.
-    ssh.run(_UPDATE_M3_CMD.format(remote_fw))
+    result = ssh.run(_UPDATE_M3_CMD.format(remote_fw))
+    return {"flash-m3": result}
 
-    return results
 
-
-def reset_m3(config_ssh, nodes):
+def reset_m3(config_ssh, nodes, verbose=False):
     """Reset the M3 of open A8 nodes."""
-    results = []
 
     # Configure ssh.
     groups = _nodes_grouped(nodes)
-    ssh = OpenA8Ssh(config_ssh)
+    ssh = OpenA8Ssh(config_ssh, groups, verbose=verbose)
 
     # Run M3 reset command.
-    ssh.run(_RESET_M3_CMD, groups=groups)
+    result = ssh.run(_RESET_M3_CMD)
 
-    return results
+    return {"reset-m3": result}
+
+
+def wait_for_boot(config_ssh, nodes, max_wait=120, verbose=False):
+    """Reset the M3 of open A8 nodes."""
+
+    # Configure ssh.
+    groups = _nodes_grouped(nodes)
+    ssh = OpenA8Ssh(config_ssh, groups, verbose=verbose)
+
+    # Wait for A8 boot
+    result = ssh.wait(max_wait)
+
+    return {"wait-for-boot": result}

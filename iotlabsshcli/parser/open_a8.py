@@ -44,8 +44,8 @@ def parse_options():
     subparsers.required = True  # needed for python 3.
 
     # update-m3 parser
-    update_parser = subparsers.add_parser('update-m3',
-                                          help='update the M3 firmware of A8 '
+    update_parser = subparsers.add_parser('flash-m3',
+                                          help='Flash the M3 firmware of A8 '
                                                'node')
     update_parser.add_argument('firmware', help='firmware elf path.')
     # nodes list or exclude list
@@ -56,6 +56,23 @@ def parse_options():
                                          help='reset the M3 of A8 node')
     # nodes list or exclude list
     common.add_nodes_selection_list(reset_parser)
+
+    # wait-for-boot parser
+    boot_parser = subparsers.add_parser('wait-for-boot',
+                                        help='Waits until A8 node have boot')
+
+    boot_parser.add_argument('--max-wait',
+                             type=int,
+                             default=120,
+                             help='Maximum waiting delay for A8 nodes boot '
+                                  '(in seconds)')
+
+    # nodes list or exclude list
+    common.add_nodes_selection_list(boot_parser)
+
+    parser.add_argument('--verbose',
+                        action='store_true',
+                        help='Set verbose output')
 
     return parser
 
@@ -70,18 +87,24 @@ def open_a8_parse_and_run(opts):
         'user': user,
     }
 
-    # TODO: replace list_nodes function in order to work without -l option.
     nodes = common.list_nodes(api, exp_id, opts.nodes_list,
                               opts.exclude_nodes_list)
 
-    # TODO: filter only a8 nodes
-    nodes = ["node-{0}".format(node) for node in nodes]
+    # Only keep A8 nodes
+    nodes = ["node-{0}".format(node)
+             for node in nodes if node.startswith('a8')]
 
     command = opts.command
     if command == 'reset-m3':
-        return iotlabsshcli.open_a8.reset_m3(config_ssh, nodes)
-    elif command == 'update-m3':
-        return iotlabsshcli.open_a8.update_m3(config_ssh, nodes, opts.firmware)
+        return iotlabsshcli.open_a8.reset_m3(config_ssh, nodes,
+                                             verbose=opts.verbose)
+    elif command == 'flash-m3':
+        return iotlabsshcli.open_a8.flash_m3(config_ssh, nodes, opts.firmware,
+                                             verbose=opts.verbose)
+    elif command == 'wait-for-boot':
+        return iotlabsshcli.open_a8.wait_for_boot(config_ssh, nodes,
+                                                  max_wait=opts.max_wait,
+                                                  verbose=opts.verbose)
     else:  # pragma: no cover
         raise ValueError('Unknown command {0}'.format(command))
 

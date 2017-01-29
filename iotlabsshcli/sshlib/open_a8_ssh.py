@@ -21,14 +21,52 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 
-from pssh import ParallelSSHClient, utils
-from pprint import pprint
+import sys
+import time
+from pssh import ParallelSSHClient, SSHClient, utils
+from pssh.exceptions import (AuthenticationException, UnknownHostException,
+                             ConnectionErrorException)
+
+
+def _print_output(output, hosts):
+    for host in hosts:
+        for _ in output[host]['stdout']:
+            pass
+
+
+def _node_fqdn(node, site):
+    return '{}.{}.iot-lab.info'.format(node, site)
+
+
+def _cleanup_result(result):
+    key_to_del = []
+    for key, value in result.items():
+        if len(value) == 0:
+            key_to_del.append(key)
+    for key in key_to_del:
+        del result[key]
+
+    return result
+
+
+def _nodes_from_groups(group):
+    result = []
+    for site, nodes in group.items():
+        for node in nodes:
+            result.append(_node_fqdn(node, site))
+
+    return result
+
+
+def _all_nodes_in_results(nodes, results):
+    return (sorted(nodes) == sorted(results["0"]) or
+            sorted(nodes) == sorted(results["1"]))
 
 
 class OpenA8Ssh():
     """Implement SshAPI for Parallel SSH."""
 
-    def __init__(self, config_ssh, groups={}, verbose=False):
+    def __init__(self, config_ssh, groups, verbose=False):
         self.config_ssh = config_ssh
         self.groups = groups
         self.verbose = verbose
@@ -38,26 +76,75 @@ class OpenA8Ssh():
 
     def run(self, command):
         """Run ssh command using Parallel SSH."""
+        result = {"0": [], "1": []}
         for site in self.groups:
             client = ParallelSSHClient(self.groups[site],
                                        user='root',
                                        proxy_host='{}'
                                                   '.iot-lab.info'.format(site),
                                        proxy_user=self.config_ssh['user'])
-            output = client.run_command(command)
-            client.join(output)
-            if self.verbose:
-                self._print_output(output, self.groups[site])
-        return
+            try:
+                output = client.run_command(command)
+                client.join(output)
+            except (AuthenticationException, UnknownHostException,
+                    ConnectionErrorException):
+                pass
+            else:
+                for host in self.groups[site]:
+                    result['1' if output[host]['exit_code'] else '0'].append(
+                        '{}.{}.iot-lab.info'.format(host, site))
+                if self.verbose:
+                    _print_output(output, self.groups[site])
+        return _cleanup_result(result)
 
     def scp(self, src, dst):
         """Copy file to hosts using Parallel SSH copy_file"""
         sites = ['{}.iot-lab.info'.format(site) for site in self.groups]
         client = ParallelSSHClient(sites, user=self.config_ssh['user'])
-        return client.copy_file(src, dst)
+        client.copy_file(src, dst)
+        return
 
-    def _print_output(self, output, hosts):
-        for host in hosts:
-            pprint(output[host])
-            for line in output[host]['stdout']:
-                pass
+    def wait(self, max_wait):
+        """Wait for requested A8 nodes until they boot"""
+        result = {"0": [], "1": []}
+        whole_nodes = _nodes_from_groups(self.groups)
+
+        start_time = time.time()
+        while (start_time + max_wait > time.time() and
+               not _all_nodes_in_results(whole_nodes, result)):
+            for site, nodes in self.groups.items():
+                for node in nodes:
+                    if _node_fqdn(node, site) in result["0"]:
+                        continue
+                    if self._try_connection(node, site):
+                        result["0"].append(_node_fqdn(node, site))
+
+            time.sleep(2)
+        for node in whole_nodes:
+            if node not in result["0"]:
+                result["1"].append(node)
+
+        return _cleanup_result(result)
+
+    def _try_connection(self, node, site):
+        dev_null = sys.stderr = open('/dev/null', 'w')
+        result = False
+        try:
+            client = SSHClient(node, user='root',
+                               proxy_host='{}.iot-lab.info'
+                               .format(site),
+                               proxy_user=self.config_ssh['user'])
+        except ConnectionErrorException:
+            if self.verbose:
+                print("Node {} not ready."
+                      .format(_node_fqdn(node, site)))
+        else:
+            client.client.close()
+            if self.verbose:
+                print("Node {} ready."
+                      .format(_node_fqdn(node, site)))
+            result = True
+        finally:
+            dev_null.close()
+
+        return result

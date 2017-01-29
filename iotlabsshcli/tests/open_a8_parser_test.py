@@ -34,9 +34,9 @@ class TestMainNodeParser(MainMock):
     """Test open-a8-cli main parser."""
 
     _nodes = ['a8-{0}.saclay.iot-lab.info'.format(i) for i in range(1, 6)]
-    _root_nodes = ['root@node-{0}'.format(node) for node in _nodes]
+    _root_nodes = ['node-{0}'.format(node) for node in _nodes]
 
-    @patch('iotlabsshcli.open_a8.update_m3')
+    @patch('iotlabsshcli.open_a8.flash_m3')
     @patch('iotlabcli.parser.common.list_nodes')
     def test_main_update_m3(self, list_nodes, update_m3):
         """Run the parser.node.main with update-m3 subparser function."""
@@ -44,11 +44,11 @@ class TestMainNodeParser(MainMock):
         update_m3.return_value = {'result': 'test'}
         list_nodes.return_value = self._nodes
 
-        args = ['update-m3', 'firmware.elf', '-l', 'saclay,a8,1-5']
+        args = ['flash-m3', 'firmware.elf', '-l', 'saclay,a8,1-5']
         open_a8_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, [self._nodes], None)
         update_m3.assert_called_with({'user': 'username'}, self._root_nodes,
-                                     'firmware.elf')
+                                     'firmware.elf', verbose=False)
 
     @patch('iotlabsshcli.open_a8.reset_m3')
     @patch('iotlabcli.parser.common.list_nodes')
@@ -60,14 +60,15 @@ class TestMainNodeParser(MainMock):
         args = ['reset-m3', '-l', 'saclay,a8,1-5']
         open_a8_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, [self._nodes], None)
-        reset_m3.assert_called_with({'user': 'username'}, self._root_nodes)
+        reset_m3.assert_called_with({'user': 'username'}, self._root_nodes,
+                                    verbose=False)
 
     def test_main_unknown_function(self):
         """Run the parser.node.main with an unknown function."""
         args = ['unknown-cmd']
         self.assertRaises(SystemExit, open_a8_parser.main, args)
 
-    def test_open_a8_parse_and_run_unknown_function(self):
+    def test_run_unknown_function(self):
         """Run the parser.node.main with an unknown function."""
         args = ['unknown-cmd']
         parser = open_a8_parser.parse_options()
