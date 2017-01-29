@@ -21,7 +21,6 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 import os
-import sys
 from setuptools import setup, find_packages
 
 PACKAGE = 'iotlabsshcli'
@@ -45,14 +44,7 @@ def get_version(package):
 
 SCRIPTS = ['open-a8-cli']
 
-INSTALL_REQUIRES = ['argparse', 'iotlabcli>=2.0']
-
-if sys.version_info[0] == 3:
-    # Use python 3 compatible version of fabric
-    INSTALL_REQUIRES.append('fabric3')
-else:
-    INSTALL_REQUIRES.append('fabric')
-
+INSTALL_REQUIRES = ['argparse', 'iotlabcli>=2.0', 'parallel-ssh>=0.17']
 
 setup(
     name=PACKAGE,

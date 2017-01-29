@@ -22,26 +22,35 @@
 
 from __future__ import print_function
 import os.path
-from iotlabsshcli.sshlib.fabric_ssh import Ssh
+from iotlabsshcli.sshlib import OpenA8Ssh
 
 
-def _sites_from_nodes(nodes):
-    """Get list of sites from a list of nodes.
+def _nodes_grouped(nodes):
+    """Group nodes per site from a list of nodes.
     >>> _sites_from_nodes([])
     []
     >>> _sites_from_nodes(['node-a8-1.grenoble.iot-lab.info',
     ...                    'node-a8-2.grenoble.iot-lab.info',
     ...                    'node-a8-2.saclay.iot-lab.info',
     ...                    'node-a8-2.lille.iot-lab.info'])
-    ['grenoble.iot-lab.info', 'lille.iot-lab.info', 'saclay.iot-lab.info']
+    {'grenoble': ['node-a8-1', 'node-a8-2'],
+    ...           'lille': ['node-a8-2'],
+    ...           'saclay': ['node-a8-2']}
     """
-    sites = {host.split('.', 1)[1] for host in nodes}
-    return sorted(list(sites))
+    result = {}
+    for host in nodes:
+        node = host.split('.')[0]
+        site = host.split('.')[1]
+        if site not in result:
+            result.update({site: [node]})
+        else:
+            result[site].append(node)
+    return result
 
 
-_MKDIR_DST_CMD = 'mkdir -p {0}'
-_UPDATE_M3_CMD = 'flash_a8_m3 {0}'
-_RESET_M3_CMD = 'reset_a8_m3'
+_MKDIR_DST_CMD = 'mkdir -p {}'
+_UPDATE_M3_CMD = 'source /etc/profile && /usr/bin/flash_a8_m3 {}'
+_RESET_M3_CMD = 'source /etc/profile && /usr/bin/reset_a8_m3'
 
 
 def update_m3(config_ssh, nodes, firmware):
@@ -49,21 +58,18 @@ def update_m3(config_ssh, nodes, firmware):
     results = []
 
     # Configure ssh and remote firmware names.
-    ssh = Ssh(config_ssh)
-    sites = _sites_from_nodes(nodes)
+    groups = _nodes_grouped(nodes)
+    ssh = OpenA8Ssh(config_ssh, groups=groups)
     remote_fw = os.path.join('~/A8/.iotlabsshcli', os.path.basename(firmware))
 
     # Create firmware destination directory
-    result = ssh.run(_MKDIR_DST_CMD.format(os.path.dirname(remote_fw)),
-                     hosts=sites)
+    ssh.run(_MKDIR_DST_CMD.format(os.path.dirname(remote_fw)))
 
     # Copy firmware on sites.
-    result = ssh.scp(firmware, remote_fw, hosts=sites)
-    results.append({'scp': result})
+    ssh.scp(firmware, remote_fw)
 
     # Run firmware update.
-    result = ssh.run(_UPDATE_M3_CMD.format(remote_fw), hosts=nodes)
-    results.append({'update-m3': result})
+    ssh.run(_UPDATE_M3_CMD.format(remote_fw))
 
     return results
 
@@ -73,10 +79,10 @@ def reset_m3(config_ssh, nodes):
     results = []
 
     # Configure ssh.
-    ssh = Ssh(config_ssh)
+    groups = _nodes_grouped(nodes)
+    ssh = OpenA8Ssh(config_ssh)
 
     # Run M3 reset command.
-    result = ssh.run(_RESET_M3_CMD, hosts=nodes)
-    results.append({'reset-m3': result})
+    ssh.run(_RESET_M3_CMD, groups=groups)
 
     return results

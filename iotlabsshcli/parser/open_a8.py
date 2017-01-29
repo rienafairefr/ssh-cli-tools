@@ -75,7 +75,7 @@ def open_a8_parse_and_run(opts):
                               opts.exclude_nodes_list)
 
     # TODO: filter only a8 nodes
-    nodes = ["root@node-{0}".format(node) for node in nodes]
+    nodes = ["node-{0}".format(node) for node in nodes]
 
     command = opts.command
     if command == 'reset-m3':
