@@ -26,6 +26,7 @@ import time
 from pssh import ParallelSSHClient, SSHClient, utils
 from pssh.exceptions import (AuthenticationException, UnknownHostException,
                              ConnectionErrorException)
+from scp import SCPClient
 
 
 def _print_output(output, hosts):
@@ -100,8 +101,11 @@ class OpenA8Ssh():
     def scp(self, src, dst):
         """Copy file to hosts using Parallel SSH copy_file"""
         sites = ['{}.iot-lab.info'.format(site) for site in self.groups]
-        client = ParallelSSHClient(sites, user=self.config_ssh['user'])
-        client.copy_file(src, dst)
+        for site in sites:
+            ssh = SSHClient(site, user=self.config_ssh['user'])
+            with SCPClient(ssh.client.get_transport()) as scp:
+                scp.put(src, dst)
+            ssh.client.close()
         return
 
     def wait(self, max_wait):
