@@ -13,8 +13,7 @@ The provided sub-commands are:
 | ------------ | -------- |
 | `flash-m3`   | Flash the given firmware on the M3 MCU of the A8 node. |
 | `reset-m3`   | Reset the M3 node. |
-| `wait-for-boot`  | Block the execution until all given nodes have booted
-or maximum wait time has expired |
+| `wait-for-boot`  | Block the execution until all given nodes have booted or maximum wait time has expired |
 
 SSH CLI Tools can be used in conjunction with the
 [IoT-Lab CLI Tools](https://github.com/iot-lab/cli-tools) commands like
