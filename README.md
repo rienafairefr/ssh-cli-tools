@@ -8,6 +8,7 @@ All available actions provided by SSH CLI Tools are available as sub-commands
 of `open-a8-cli`.
 
 The provided sub-commands are:
+
 | Sub-command  | Function |
 | ------------ | -------- |
 | `flash-m3`   | Flash the given firmware on the M3 MCU of the A8 node. |
