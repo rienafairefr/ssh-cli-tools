@@ -64,7 +64,7 @@ def _all_nodes_in_results(nodes, results):
             sorted(nodes) == sorted(results["1"]))
 
 
-class OpenA8Ssh():
+class OpenA8Ssh(object):
     """Implement SshAPI for Parallel SSH."""
 
     def __init__(self, config_ssh, groups, verbose=False):
