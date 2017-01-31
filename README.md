@@ -21,12 +21,17 @@ SSH CLI Tools can be used in conjunction with the
 
 ### Installation:
 
-You need to install the parallel-ssh dependency first on your system:
+You need to install python [pip](https://pip.pypa.io/en/stable/) on your
+system and use a version >= 9.0. Use pip3 if you have Python 3 by default:
 ```
-$ pip install -i https://pypi.anaconda.org/pypi/simple parallel-ssh
+$ sudo apt-get install python-pip (or python3-pip)
+$ sudo pip install pip --upgrade
+$ sudo pip3 install pip --upgrade (Python 3 case)
+$ pip --version
+pip 9.0.1 from /usr/local/lib/python2.7/dist-packages (python 2.7)
 ```
 
-Then use Python [pip](https://pip.pypa.io/en/stable/) to install the tools:
+Then clone this repository and use pip (or pip3 for Python 3) to install the tools:
 ```
 $ git clone https://github.com/iot-lab/ssh-cli-tools.git
 $ cd ssh-cli-tools

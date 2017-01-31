@@ -45,7 +45,7 @@ def get_version(package):
 SCRIPTS = ['open-a8-cli']
 
 INSTALL_REQUIRES = ['argparse', 'iotlabcli>=2.0', 'parallel-ssh>=0.94',
-                    'scp>=0.10']
+                    'scp>=0.10', 'gevent>=1.2.1']
 
 setup(
     name=PACKAGE,
