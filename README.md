@@ -19,6 +19,20 @@ SSH CLI Tools can be used in conjunction with the
 [IoT-Lab CLI Tools](https://github.com/iot-lab/cli-tools) commands like
 `auth-cli` and `experiment-cli`.
 
+### Installation:
+
+You need to install the parallel-ssh dependency first on your system:
+```
+$ pip install -i https://pypi.anaconda.org/pypi/simple parallel-ssh
+```
+
+Then use Python [pip](https://pip.pypa.io/en/stable/) to install the tools:
+```
+$ git clone https://github.com/iot-lab/ssh-cli-tools.git
+$ cd ssh-cli-tools
+$ sudo pip install -e . 
+```
+
 ### Examples:
 
 * Start an experiment, wait for it ot be ready, wait for all A8 boot
