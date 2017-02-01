@@ -1,9 +1,7 @@
-[![build][build-icon]][build-page]
-
 [build-icon]: https://travis-ci.org/iot-lab/ssh-cli-tools.svg?branch=master
 [build-page]: https://travis-ci.org/iot-lab/ssh-cli-tools
 
-## SSH CLI Tools
+## SSH CLI Tools `                 ` [![build][build-icon]][build-page]
 
 SSH CLI Tools provides a set of commands for interacting remotely and easily
 with IoT-Lab Open A8 nodes. See [here](https://www.iot-lab.info/hardware/a8/)
