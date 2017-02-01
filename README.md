@@ -40,6 +40,11 @@ $ git clone https://github.com/iot-lab/ssh-cli-tools.git
 $ cd ssh-cli-tools
 $ sudo pip install -e . 
 ```
+### Requirement:
+
+Open A8 nodes are reachable through a gateway SSH server (eg. IoT-LAB SSH frontend). For this reason you must 
+verify that your SSH public key used by ssh-cli-tools has been recorded in your IoT-LAB user profile. You can 
+find how to configure your IoT-LAB SSH access in this [tutorial](https://www.iot-lab.info/tutorials/configure-your-ssh-access/). 
 
 ### Examples:
 
@@ -50,9 +55,9 @@ $ experiment-cli submit -d 120 -l saclay,a8,1-10
     "id": 65535
 }
 $ experiment-cli wait
-Waiting that experiment 59048 gets in state Running
+Waiting that experiment 65535 gets in state Running
 "Running"
-$ open-a8-cli -i 59048 wait-for-boot -l saclay,a8,2-10
+$ open-a8-cli wait-for-boot
 {
     "wait-for-boot": {
         "0": [
@@ -74,7 +79,7 @@ $ open-a8-cli -i 59048 wait-for-boot -l saclay,a8,2-10
 Note: node-a8-4 and node-a8-8 are broken in Saclay.
 * Flash a firmware on the M3 of the working nodes:
 ```
-$ open-a8-cli -i 59048 flash-m3 <firmware.elf> -l saclay,a8,2-3+5-7+9-10
+$ open-a8-cli flash-m3 <firmware.elf> -l saclay,a8,2-3+5-7+9-10
 {
     "flash-m3": {
         "0": [
@@ -91,7 +96,7 @@ $ open-a8-cli -i 59048 flash-m3 <firmware.elf> -l saclay,a8,2-3+5-7+9-10
 ```
 * Reset the M3 of one A8 node:
 ```
-$ open-a8-cli -i 59048 reset-m3 -l saclay,a8,2
+$ open-a8-cli reset-m3 -l saclay,a8,2
 {
     "reset-m3": {
         "0": [
@@ -102,7 +107,7 @@ $ open-a8-cli -i 59048 reset-m3 -l saclay,a8,2
 ```
 * Use the `--verbose` option to get the commands output:
 ```
-$ open-a8-cli -i 59048 --verbose reset-m3 -l saclay,a8,2
+$ open-a8-cli --verbose reset-m3 -l saclay,a8,2
 Connecting via SSH proxy saclay.iot-lab.info:22 -> node-a8-2:22
 [node-a8-2]	Open On-Chip Debugger 0.9.0-dirty (2016-04-15-00:55)
 [node-a8-2]	Licensed under GNU GPL v2
