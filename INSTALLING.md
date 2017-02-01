@@ -26,9 +26,12 @@ Installing on your dev PC
 we recommend using a virtual environment
 
 you will need pip (version 9.0.1+ known to work)
+you will need python-dev
 
 	sudo apt-get-install virtualenvwrapper
 	sudo apt-get install pip
+	sudo apt-get install python-dev
+
 
 	mkvirtualenv xx
 	git clone git@github.com:iot-lab/ssh-cli-tools.git
