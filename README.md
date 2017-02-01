@@ -19,6 +19,11 @@ SSH CLI Tools can be used in conjunction with the
 [IoT-Lab CLI Tools](https://github.com/iot-lab/cli-tools) commands like
 `auth-cli` and `experiment-cli`.
 
+[![build][build-icon]][build-page]
+
+[build-icon]: https://travis-ci.org/iot-lab/ssh-cli-tools.svg?branch=master
+[build-page]: https://travis-ci.org/iot-lab/ssh-cli-tools
+
 ### Installation:
 
 You need to install python [pip](https://pip.pypa.io/en/stable/) on your
