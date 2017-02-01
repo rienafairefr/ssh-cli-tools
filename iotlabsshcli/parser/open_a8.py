@@ -27,6 +27,7 @@ from iotlabcli import auth
 from iotlabcli import helpers
 from iotlabcli import rest
 from iotlabcli.parser import common
+from iotlabcli.parser.common import _get_experiment_nodes_list
 import iotlabsshcli.open_a8
 
 
@@ -89,6 +90,10 @@ def open_a8_parse_and_run(opts):
 
     nodes = common.list_nodes(api, exp_id, opts.nodes_list,
                               opts.exclude_nodes_list)
+
+    # Only if nodes_list or exclude_nodes_list is not specify (nodes = [])
+    if not nodes:
+        nodes = _get_experiment_nodes_list(api, exp_id)
 
     # Only keep A8 nodes
     nodes = ["node-{0}".format(node)
