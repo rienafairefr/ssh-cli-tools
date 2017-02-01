@@ -1,3 +1,8 @@
+[![build][build-icon]][build-page]
+
+[build-icon]: https://travis-ci.com/iot-lab/ssh-cli-tools.svg?token=sjhpv9xa8XkzWYbGKHfw&branch=master
+[build-page]: https://travis-ci.com/iot-lab/ssh-cli-tools
+
 ## SSH CLI Tools
 
 SSH CLI Tools provides a set of commands for interacting remotely and easily
@@ -18,11 +23,6 @@ The provided sub-commands are:
 SSH CLI Tools can be used in conjunction with the
 [IoT-Lab CLI Tools](https://github.com/iot-lab/cli-tools) commands like
 `auth-cli` and `experiment-cli`.
-
-[![build][build-icon]][build-page]
-
-[build-icon]: https://travis-ci.com/iot-lab/ssh-cli-tools.svg?token=sjhpv9xa8XkzWYbGKHfw&branch=master
-[build-page]: https://travis-ci.com/iot-lab/ssh-cli-tools
 
 ### Installation:
 
