@@ -1,7 +1,7 @@
 [![build][build-icon]][build-page]
 
-[build-icon]: https://travis-ci.com/iot-lab/ssh-cli-tools.svg?token=sjhpv9xa8XkzWYbGKHfw&branch=master
-[build-page]: https://travis-ci.com/iot-lab/ssh-cli-tools
+[build-icon]: https://travis-ci.org/iot-lab/ssh-cli-tools.svg?branch=master
+[build-page]: https://travis-ci.org/iot-lab/ssh-cli-tools
 
 ## SSH CLI Tools
 
