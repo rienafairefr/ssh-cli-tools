@@ -2,4 +2,4 @@ language: python
 
 script:
   - pip install .
-  - open-a8-cli
+  - open-a8-cli --help
