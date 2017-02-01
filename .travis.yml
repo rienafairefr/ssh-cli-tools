@@ -4,5 +4,8 @@ script:
   - pip install .
   - open-a8-cli --help
 
-  - pip install tox
-  - tox -e py27-lint,py27-tests
+#  - pip install tox
+#  - tox -e py27-lint,py27-tests
+
+  - pip install mock
+  - py.test
