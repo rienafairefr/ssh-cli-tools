@@ -65,5 +65,6 @@ setup(
                  'Intended Audience :: End Users/Desktop',
                  'Environment :: Console',
                  'Topic :: Utilities', ],
+    python_requires='>=2.7',
     install_requires=INSTALL_REQUIRES,
 )
