@@ -1,5 +1,9 @@
 language: python
 
+install:
+  - pip install tox
+
 script:
   - pip install .
   - open-a8-cli --help
+  - tox
