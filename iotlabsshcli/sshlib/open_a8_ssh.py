@@ -24,8 +24,7 @@
 import sys
 import time
 from pssh import ParallelSSHClient, SSHClient, utils
-from pssh.exceptions import (AuthenticationException, UnknownHostException,
-                             ConnectionErrorException)
+from pssh.exceptions import AuthenticationException, ConnectionErrorException
 from scp import SCPClient
 
 
@@ -64,6 +63,14 @@ def _all_nodes_in_results(nodes, results):
             sorted(nodes) == sorted(results["1"]))
 
 
+class OpenA8SshAuthenticationException(Exception):
+    """Raised when an authentication error occurs on one site"""
+
+    def __init__(self, site):
+        self.msg = ('Cannot connect to IoT-LAB server on site '
+                    '"{}", check your SSH configuration.'.format(site))
+
+
 class OpenA8Ssh(object):
     """Implement SshAPI for Parallel SSH."""
 
@@ -87,9 +94,8 @@ class OpenA8Ssh(object):
             try:
                 output = client.run_command(command)
                 client.join(output)
-            except (AuthenticationException, UnknownHostException,
-                    ConnectionErrorException):
-                pass
+            except AuthenticationException:
+                raise OpenA8SshAuthenticationException(site)
             else:
                 for host in self.groups[site]:
                     result['1' if output[host]['exit_code'] else '0'].append(
@@ -102,10 +108,14 @@ class OpenA8Ssh(object):
         """Copy file to hosts using Parallel SSH copy_file"""
         sites = ['{}.iot-lab.info'.format(site) for site in self.groups]
         for site in sites:
-            ssh = SSHClient(site, user=self.config_ssh['user'])
-            with SCPClient(ssh.client.get_transport()) as scp:
-                scp.put(src, dst)
-            ssh.client.close()
+            try:
+                ssh = SSHClient(site, user=self.config_ssh['user'])
+            except AuthenticationException:
+                raise OpenA8SshAuthenticationException(site)
+            else:
+                with SCPClient(ssh.client.get_transport()) as scp:
+                    scp.put(src, dst)
+                ssh.client.close()
         return
 
     def wait(self, max_wait):
@@ -138,6 +148,8 @@ class OpenA8Ssh(object):
                                proxy_host='{}.iot-lab.info'
                                .format(site),
                                proxy_user=self.config_ssh['user'])
+        except AuthenticationException:
+            raise OpenA8SshAuthenticationException(site)
         except ConnectionErrorException:
             if self.verbose:
                 print("Node {} not ready."

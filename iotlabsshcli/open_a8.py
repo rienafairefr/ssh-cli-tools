@@ -25,7 +25,7 @@ from __future__ import print_function
 import os.path
 
 from collections import OrderedDict
-from iotlabsshcli.sshlib import OpenA8Ssh
+from iotlabsshcli.sshlib import OpenA8Ssh, OpenA8SshAuthenticationException
 
 
 def _nodes_grouped(nodes):
@@ -65,7 +65,11 @@ def flash_m3(config_ssh, nodes, firmware, verbose=False):
     remote_fw = os.path.join('~/A8/.iotlabsshcli', os.path.basename(firmware))
 
     # Create firmware destination directory
-    ssh.run(_MKDIR_DST_CMD.format(os.path.dirname(remote_fw)))
+    try:
+        ssh.run(_MKDIR_DST_CMD.format(os.path.dirname(remote_fw)))
+    except OpenA8SshAuthenticationException as e:
+        print(e.msg)
+        return {"1": nodes}
 
     # Copy firmware on sites.
     ssh.scp(firmware, remote_fw)
@@ -83,7 +87,11 @@ def reset_m3(config_ssh, nodes, verbose=False):
     ssh = OpenA8Ssh(config_ssh, groups, verbose=verbose)
 
     # Run M3 reset command.
-    result = ssh.run(_RESET_M3_CMD)
+    try:
+        result = ssh.run(_RESET_M3_CMD)
+    except OpenA8SshAuthenticationException as e:
+        print(e.msg)
+        return {"1": nodes}
 
     return {"reset-m3": result}
 
@@ -96,6 +104,10 @@ def wait_for_boot(config_ssh, nodes, max_wait=120, verbose=False):
     ssh = OpenA8Ssh(config_ssh, groups, verbose=verbose)
 
     # Wait for A8 boot
-    result = ssh.wait(max_wait)
+    try:
+        result = ssh.wait(max_wait)
+    except OpenA8SshAuthenticationException as e:
+        print(e.msg)
+        return {"1": nodes}
 
     return {"wait-for-boot": result}
