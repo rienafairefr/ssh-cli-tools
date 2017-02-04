@@ -29,16 +29,36 @@ from scp import SCPClient
 
 
 def _print_output(output, hosts):
+    """Display command output for each host.
+
+    output is a generator that prints a line at each iteration.
+    """
     for host in hosts:
         for _ in output[host]['stdout']:
             pass
 
 
 def _node_fqdn(node, site):
+    """Return the fully qualifed domain name of a node.
+
+    >>> _node_fqdn("node-a8-1", "saclay")
+    'node-a8-1.saclay.iot-lab.info'
+    """
     return '{}.{}.iot-lab.info'.format(node, site)
 
 
 def _cleanup_result(result):
+    """Remove empty list from result.
+
+    >>> _cleanup_result({ '0': [], '1': []})
+    {}
+    >>> _cleanup_result({ '0': [1, 2, 3], '1': []})
+    {'0': [1, 2, 3]}
+    >>> _cleanup_result({ '0': [], '1': [1, 2, 3]})
+    {'1': [1, 2, 3]}
+    >>> sorted(_cleanup_result({ '0': [1, 2, 3], '1': [4, 5, 6]}).items())
+    [('0', [1, 2, 3]), ('1', [4, 5, 6])]
+    """
     key_to_del = []
     for key, value in result.items():
         if len(value) == 0:
@@ -50,17 +70,37 @@ def _cleanup_result(result):
 
 
 def _nodes_from_groups(group):
+    """Return the full node list from nodes grouped by sites.
+
+    >>> _nodes_from_groups({'saclay': ['node-a8-1', 'node-a8-2'],
+    ...                     'grenoble': ['node-a8-10', 'node-a8-11']})
+    ['node-a8-10.grenoble.iot-lab.info', 'node-a8-11.grenoble.iot-lab.info', \
+'node-a8-1.saclay.iot-lab.info', 'node-a8-2.saclay.iot-lab.info']
+    """
     result = []
-    for site, nodes in group.items():
+    for site, nodes in sorted(group.items()):
         for node in nodes:
             result.append(_node_fqdn(node, site))
 
     return result
 
 
-def _all_nodes_in_results(nodes, results):
-    return (sorted(nodes) == sorted(results["0"]) or
-            sorted(nodes) == sorted(results["1"]))
+def _check_all_nodes_processed(nodes, result):
+    """Verify all nodes are successful or failed.
+
+    >>> _check_all_nodes_processed([1, 2, 3, 4], { '0': [1, 2], '1': [3, 4]})
+    False
+    >>> _check_all_nodes_processed([1, 2, 3, 4], { '0': [1, 2, 3, 4], '1': []})
+    True
+    >>> _check_all_nodes_processed([1, 2, 3, 4], { '0': [], '1': [1, 2, 3, 4]})
+    True
+    >>> _check_all_nodes_processed([1, 2, 3, 4], { '0': [], '1': []})
+    False
+    >>> _check_all_nodes_processed([], { '0': [], '1': []})
+    True
+    """
+    return (sorted(nodes) == sorted(result["0"]) or
+            sorted(nodes) == sorted(result["1"]))
 
 
 class OpenA8SshAuthenticationException(Exception):
@@ -127,7 +167,7 @@ class OpenA8Ssh(object):
 
         start_time = time.time()
         while (start_time + max_wait > time.time() and
-               not _all_nodes_in_results(whole_nodes, result)):
+               not _check_all_nodes_processed(whole_nodes, result)):
             for site, nodes in self.groups.items():
                 for node in nodes:
                     if _node_fqdn(node, site) in result["0"]:
