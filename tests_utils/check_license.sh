@@ -15,6 +15,7 @@ files_list=$(echo "${files_list}" | grep -v \
     -e 'AUTHORS' \
     -e 'COPYING' \
     -e 'ssh_config' \
+    -e '.travis.yml' \
 )
 
 # Verify that 'AUTHORS' and 'COPYING' files exist
