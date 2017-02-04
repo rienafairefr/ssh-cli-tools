@@ -67,8 +67,10 @@ class OpenA8SshAuthenticationException(Exception):
     """Raised when an authentication error occurs on one site"""
 
     def __init__(self, site):
-        self.msg = ('Cannot connect to IoT-LAB server on site '
-                    '"{}", check your SSH configuration.'.format(site))
+        msg = ('Cannot connect to IoT-LAB server on site '
+               '"{}", check your SSH configuration.'.format(site))
+        super(OpenA8SshAuthenticationException, self).__init__(msg)
+        self.msg = msg
 
 
 class OpenA8Ssh(object):

@@ -1,7 +1,4 @@
-[build-icon]: https://travis-ci.org/iot-lab/ssh-cli-tools.svg?branch=master
-[build-page]: https://travis-ci.org/iot-lab/ssh-cli-tools
-
-## SSH CLI Tools                     [![build][build-icon]][build-page]
+## SSH CLI Tools
 
 SSH CLI Tools provides a set of commands for interacting remotely and easily
 with IoT-Lab Open A8 nodes. See [here](https://www.iot-lab.info/hardware/a8/)
@@ -24,6 +21,13 @@ SSH CLI Tools can be used in conjunction with the
 
 ### Installation:
 
+[build-icon]: https://travis-ci.org/iot-lab/ssh-cli-tools.svg?branch=master
+[build-page]: https://travis-ci.org/iot-lab/ssh-cli-tools
+[coverage-icon]: https://codecov.io/gh/iot-lab/ssh-cli-tools/branch/master/graph/badge.svg
+[coverage-page]: https://codecov.io/gh/iot-lab/ssh-cli-tools
+
+[![build][build-icon]][build-page]  [![codecov][coverage-icon]][coverage-page]
+
 You need python [pip](https://pip.pypa.io/en/stable/).
 Pip version >= 9.0 is known to work ; you may need to upgrade.
 See INSTALLING.md for details on installation options.
@@ -37,9 +41,9 @@ $ sudo pip install .
 ```
 ### Requirement:
 
-Open A8 nodes are reachable through a gateway SSH server (eg. IoT-LAB SSH frontend). For this reason you must 
-verify that your SSH public key used by ssh-cli-tools has been recorded in your IoT-LAB user profile. You can 
-find how to configure your IoT-LAB SSH access in this [tutorial](https://www.iot-lab.info/tutorials/configure-your-ssh-access/). 
+Open A8 nodes are reachable through a gateway SSH server (eg. IoT-LAB SSH frontend). For this reason you must
+verify that your SSH public key used by ssh-cli-tools has been recorded in your IoT-LAB user profile. You can
+find how to configure your IoT-LAB SSH access in this [tutorial](https://www.iot-lab.info/tutorials/configure-your-ssh-access/).
 
 ### Examples:
 
