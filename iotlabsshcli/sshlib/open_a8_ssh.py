@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-"""iotlabsshcli package implementing a ssh lib using fabric."""
+"""iotlabsshcli package implementing a ssh lib using parallel-ssh."""
 
 # This file is a part of IoT-LAB ssh-cli-tools
 # Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
@@ -26,16 +26,6 @@ import time
 from pssh import ParallelSSHClient, SSHClient, utils
 from pssh.exceptions import AuthenticationException, ConnectionErrorException
 from scp import SCPClient
-
-
-def _print_output(output, hosts):
-    """Display command output for each host.
-
-    output is a generator that prints a line at each iteration.
-    """
-    for host in hosts:
-        for _ in output[host]['stdout']:
-            pass
 
 
 def _node_fqdn(node, site):
@@ -143,7 +133,9 @@ class OpenA8Ssh(object):
                     result['1' if output[host]['exit_code'] else '0'].append(
                         '{}.{}.iot-lab.info'.format(host, site))
                 if self.verbose:
-                    _print_output(output, self.groups[site])
+                    for host in self.groups[site]:
+                        for _ in output[host]['stdout']:
+                            pass
         return _cleanup_result(result)
 
     def scp(self, src, dst):
@@ -168,13 +160,12 @@ class OpenA8Ssh(object):
         start_time = time.time()
         while (start_time + max_wait > time.time() and
                not _check_all_nodes_processed(whole_nodes, result)):
-            for site, nodes in self.groups.items():
+            for site, nodes in sorted(self.groups.items()):
                 for node in nodes:
                     if _node_fqdn(node, site) in result["0"]:
                         continue
                     if self._try_connection(node, site):
                         result["0"].append(_node_fqdn(node, site))
-
             time.sleep(2)
         for node in whole_nodes:
             if node not in result["0"]:
