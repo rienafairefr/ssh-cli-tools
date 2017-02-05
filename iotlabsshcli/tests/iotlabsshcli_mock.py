@@ -42,11 +42,6 @@ class RequestRet(object):  # pylint:disable=too-few-public-methods
         self.headers = headers
         self.text = self.content.decode('utf-8')
 
-    def json(self):
-        """ Load output as JSON """
-        import json
-        return json.loads(self.text)
-
 
 def api_mock(ret=None):
     """ Return a mock of an api object
