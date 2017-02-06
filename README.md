@@ -38,6 +38,7 @@ clone this repository and use pip (or pip3 for Python 3):
 ```
 $ git clone https://github.com/iot-lab/ssh-cli-tools.git
 $ cd ssh-cli-tools
+$ sudo pip install -r requirements.txt
 $ sudo pip install .
 ```
 ### Requirement:
