@@ -1,0 +1,1 @@
+https://github.com/iot-lab/cli-tools/archive/master.zip
