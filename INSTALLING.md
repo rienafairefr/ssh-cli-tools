@@ -36,8 +36,17 @@ you will need python-dev
 	mkvirtualenv xx
 	git clone git@github.com:iot-lab/ssh-cli-tools.git
 	cd ssh-cli-tools/
-	pip install .
+	pip install -e .
 	open-a8-cli
+
+if you will be hacking the cli-tools as well:
+
+	(cd ..
+	pip uninstall iotlabcli
+	git clone git@github.com:iot-lab/cli-tools.git
+	cd cli-tools/
+	pip install -e .
+	)
 
 
 Installing / upgrading pip / pip3
