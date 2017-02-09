@@ -22,7 +22,7 @@ SSH CLI Tools can be used in conjunction with the
 ### Installation:
 
 [build-icon]: https://travis-ci.org/iot-lab/ssh-cli-tools.svg?branch=master
-[build-page]: https://travis-ci.org/iot-lab/ssh-cli-tools
+[build-page]: https://travis-ci.org/iot-lab/ssh-cli-tools/branches
 [coverage-icon]: https://codecov.io/gh/iot-lab/ssh-cli-tools/branch/master/graph/badge.svg
 [coverage-page]: https://codecov.io/gh/iot-lab/ssh-cli-tools
 
