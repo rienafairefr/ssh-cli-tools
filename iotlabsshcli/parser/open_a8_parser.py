@@ -54,7 +54,7 @@ def parse_options():
 
     # reset-m3 parser
     reset_parser = subparsers.add_parser('reset-m3',
-                                         help='reset the M3 of A8 node')
+                                         help='Reset the M3 of A8 node')
     # nodes list or exclude list
     common.add_nodes_selection_list(reset_parser)
 
@@ -66,11 +66,13 @@ def parse_options():
                              default=120,
                              help='Maximum waiting delay for A8 nodes boot '
                                   '(in seconds)')
+    # nodes list or exclude list
+    common.add_nodes_selection_list(boot_parser)
 
     # run-script parser
     run_script_parser = subparsers.add_parser('run-script',
                                               help='Run a script in background'
-                                                   'on the A8 node')
+                                                   ' on the A8 node')
     run_script_parser.add_argument('script', help='script path.')
     # nodes list or exclude list
     common.add_nodes_selection_list(run_script_parser)
