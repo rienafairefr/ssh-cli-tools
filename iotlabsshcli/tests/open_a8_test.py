@@ -107,7 +107,7 @@ def test_open_a8_wait_for_boot(wait):
 @patch('iotlabsshcli.sshlib.OpenA8Ssh.run')
 @patch('iotlabsshcli.sshlib.OpenA8Ssh.scp')
 def test_open_a8_run_script(scp, run):
-    """Test flashing an M3."""
+    """Test run script on A8 nodes."""
     config_ssh = {
         'user': 'username',
         'exp_id': 123,
