@@ -77,8 +77,13 @@ def parse_options():
     # nodes list or exclude list
     common.add_nodes_selection_list(run_script_parser)
 
+    # run-cmd parser
+    run_cmd_parser = subparsers.add_parser('run-cmd',
+                                           help='Run a command'
+                                                ' on the A8 node')
+    run_cmd_parser.add_argument('cmd', help='Command.')
     # nodes list or exclude list
-    common.add_nodes_selection_list(boot_parser)
+    common.add_nodes_selection_list(run_cmd_parser)
 
     parser.add_argument('--verbose',
                         action='store_true',
@@ -124,6 +129,10 @@ def open_a8_parse_and_run(opts):
         return iotlabsshcli.open_a8.run_script(config_ssh, nodes,
                                                opts.script,
                                                verbose=opts.verbose)
+    elif command == 'run-cmd':
+        return iotlabsshcli.open_a8.run_cmd(config_ssh, nodes,
+                                            opts.cmd,
+                                            verbose=opts.verbose)
     else:  # pragma: no cover
         raise ValueError('Unknown command {0}'.format(command))
 

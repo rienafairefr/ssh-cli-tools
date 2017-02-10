@@ -23,6 +23,7 @@
 
 import os.path
 from iotlabsshcli.open_a8 import reset_m3, flash_m3, wait_for_boot, run_script
+from iotlabsshcli.open_a8 import run_cmd
 from iotlabsshcli.open_a8 import (_RESET_M3_CMD, _UPDATE_M3_CMD,
                                   _MKDIR_DST_CMD, _RUN_SCRIPT_CMD,
                                   _QUIT_SCRIPT_CMD, _MAKE_EXECUTABLE_CMD)
@@ -140,3 +141,23 @@ def test_open_a8_run_script(scp, run):
     run.side_effect = OpenA8SshAuthenticationException('test')
     ret = run_script(config_ssh, _ROOT_NODES, script)
     assert ret == {'run-script': {'1': _ROOT_NODES}}
+
+
+@patch('iotlabsshcli.sshlib.OpenA8Ssh.run')
+def test_open_a8_run_cmd(run):
+    """Test run command on A8 nodes."""
+    config_ssh = {
+        'user': 'username',
+        'exp_id': 123,
+    }
+    cmd = 'uname -a'
+    return_value = {'0': 'test'}
+    run.return_value = return_value
+
+    ret = run_cmd(config_ssh, _ROOT_NODES, cmd)
+    assert ret == {'run-cmd': return_value}
+
+    # Raise an exception
+    run.side_effect = OpenA8SshAuthenticationException('test')
+    ret = run_cmd(config_ssh, _ROOT_NODES, cmd)
+    assert ret == {'run-cmd': {'1': _ROOT_NODES}}

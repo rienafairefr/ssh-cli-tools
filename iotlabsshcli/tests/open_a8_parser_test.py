@@ -151,6 +151,32 @@ class TestMainNodeParser(MainMock):
                                           self._root_nodes,
                                           'script.sh', verbose=False)
 
+    @patch('iotlabsshcli.open_a8.run_cmd')
+    @patch('iotlabcli.parser.common.list_nodes')
+    def test_main_run_cmd(self, list_nodes, run_cmd):
+        """Run the parser.node.main with run-cmd subparser function."""
+        run_cmd.return_value = {'result': 'test'}
+        list_nodes.return_value = self._nodes
+
+        args = ['run-cmd', 'uname -a', '-l', 'saclay,a8,1-5']
+        open_a8_parser.main(args)
+        list_nodes.assert_called_with(self.api, 123, [self._nodes], None)
+        run_cmd.assert_called_with({'user': 'username', 'exp_id': 123},
+                                   self._root_nodes,
+                                   'uname -a', verbose=False)
+
+        exp_info_res = {"items": [{"network_address": node}
+                                  for node in self._nodes]}
+        with patch.object(self.api, 'get_experiment_info',
+                          Mock(return_value=exp_info_res)):
+            list_nodes.return_value = []
+            args = ['run-cmd', 'uname -a']
+            open_a8_parser.main(args)
+            list_nodes.assert_called_with(self.api, 123, None, None)
+            run_cmd.assert_called_with({'user': 'username', 'exp_id': 123},
+                                       self._root_nodes,
+                                       'uname -a', verbose=False)
+
     def test_main_unknown_function(self):
         """Run the parser.node.main with an unknown function."""
         args = ['unknown-cmd']

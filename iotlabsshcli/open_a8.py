@@ -117,6 +117,21 @@ def wait_for_boot(config_ssh, nodes, max_wait=120, verbose=False):
     return {"wait-for-boot": result}
 
 
+def run_cmd(config_ssh, nodes, cmd, verbose=False):
+    """ Run a command on the A8 nodes."""
+
+    # Configure ssh.
+    groups = _nodes_grouped(nodes)
+    ssh = OpenA8Ssh(config_ssh, groups, verbose=verbose)
+    try:
+        result = ssh.run(cmd)
+    except OpenA8SshAuthenticationException as exc:
+        print(exc.msg)
+        result = {"1": nodes}
+
+    return {"run-cmd": result}
+
+
 def run_script(config_ssh, nodes, script, verbose=False):
     """Run a script in background on the A8 nodes."""
 
