@@ -12,9 +12,11 @@ The provided sub-commands are:
 | Sub-command  | Function |
 | ------------ | -------- |
 | `flash-m3`   | Flash the given firmware on the M3 MCU of the A8 node. |
-| `reset-m3`   | Reset the M3 node. |
-| `wait-for-boot`  | Block the execution until all given nodes have booted or maximum wait time has expired |
-| `run-script`  | Run a given script in background on the given nodes |
+| `reset-m3`   | Reset the M3 node of the A8 node. |
+| `wait-for-boot`   | Block the execution until all given A8 nodes have booted or maximum wait time has expired |
+| `run-script`  | Run a given script in background (eg. screen session) on the given A8 nodes |
+| `run-cmd`   | Run a command on the given A8 nodes |
+| `copy-file`   | Copy a file on SSH frontend homedir directory (eg. ~/A8/.iotlabsshcli) |
 
 SSH CLI Tools can be used in conjunction with the
 [IoT-Lab CLI Tools](https://github.com/iot-lab/cli-tools) commands like
@@ -98,17 +100,6 @@ $ open-a8-cli flash-m3 <firmware.elf> -l saclay,a8,2-3+5-7+9-10
     }
 }
 ```
-* Run the script `/tmp/test.sh` on `node-a8-2` in saclay:
-```
-$ open-a8-cli run-script /tmp/test.sh -l saclay,a8,2
-{
-    "run-script": {
-        "0": [
-            "node-a8-2.saclay.iot-lab.info"
-        ]
-    }
-}
-```
 * Reset the M3 of one A8 node:
 ```
 $ open-a8-cli reset-m3 -l saclay,a8,2
@@ -123,20 +114,20 @@ $ open-a8-cli reset-m3 -l saclay,a8,2
 * Use the `--verbose` option to get the commands output:
 ```
 $ open-a8-cli --verbose reset-m3 -l saclay,a8,2
-Connecting via SSH proxy saclay.iot-lab.info:22 -> node-a8-2:22
-[node-a8-2]	Open On-Chip Debugger 0.9.0-dirty (2016-04-15-00:55)
-[node-a8-2]	Licensed under GNU GPL v2
-[node-a8-2]	For bug reports, read
-[node-a8-2]	http://openocd.org/doc/doxygen/bugs.html
-[node-a8-2]	adapter speed: 1000 kHz
+Connecting via SSH proxy saclay.iot-lab.info:22 -> node-a8-2.saclay.iot-lab.info:22
+[node-a8-2.saclay.iot-lab.info]	Open On-Chip Debugger 0.9.0-dirty (2016-04-15-00:55)
+[node-a8-2.saclay.iot-lab.info]	Licensed under GNU GPL v2
+[node-a8-2.saclay.iot-lab.info] For bug reports, read
+[node-a8-2.saclay.iot-lab.info]	http://openocd.org/doc/doxygen/bugs.html
+[node-a8-2.saclay.iot-lab.info]	adapter speed: 1000 kHz
 [...]
-[node-a8-2]	TargetName         Type       Endian TapName            State
-[node-a8-2]	--  ------------------ ---------- ------ ------------------ ------------
-[node-a8-2]	0* stm32f1x.cpu       cortex_m   little stm32f1x.cpu       running
-[node-a8-2]	Info : JTAG tap: stm32f1x.cpu tap/device found: 0x3ba00477 (mfg: 0x23b, part: 0xba00, ver: 0x3)
-[node-a8-2]	Info : JTAG tap: stm32f1x.bs tap/device found: 0x06414041 (mfg: 0x020, part: 0x6414, ver: 0x0)
-[node-a8-2]	shutdown command invoked
-[node-a8-2]	Return Value: 0
+[node-a8-2.saclay.iot-lab.info]	TargetName         Type       Endian TapName            State
+[node-a8-2.saclay.iot-lab.info]	--  ------------------ ---------- ------ ------------------ ------------
+[node-a8-2.saclay.iot-lab.info] 0* stm32f1x.cpu       cortex_m   little stm32f1x.cpu       running
+[node-a8-2.saclay.iot-lab.info]	Info : JTAG tap: stm32f1x.cpu tap/device found: 0x3ba00477 (mfg: 0x23b, part: 0xba00, ver: 0x3)
+[node-a8-2.saclay.iot-lab.info]	Info : JTAG tap: stm32f1x.bs tap/device found: 0x06414041 (mfg: 0x020, part: 0x6414, ver: 0x0)
+[node-a8-2.saclay.iot-lab.info]	shutdown command invoked
+[node-a8-2.saclay.iot-lab.info]	Return Value: 0
 {
     "reset-m3": {
         "0": [
@@ -145,3 +136,72 @@ Connecting via SSH proxy saclay.iot-lab.info:22 -> node-a8-2:22
     }
 }
 ```
+* Run a command on A8 nodes
+```
+$ open-a8-cli --verbose run-cmd "uname -a" -l saclay,a8,2-3
+Connecting via SSH proxy saclay.iot-lab.info:22 -> node-a8-2.saclay.iot-lab.info:22
+[node-a8-2.saclay.iot-lab.info]	Linux node-a8-2 3.18.5-iotlab+ #9 Thu Sep 1 16:17:22 CEST 2016 armv7l GNU/Linux
+[node-a8-3.saclay.iot-lab.info]	Linux node-a8-3 3.18.5-iotlab+ #9 Thu Sep 1 16:17:22 CEST 2016 armv7l GNU/Linux
+{
+    "run-cmd": {
+        "0": [
+            "node-a8-2.saclay.iot-lab.info",
+            "node-a8-3.saclay.iot-lab.info"
+        ]
+    }
+}
+```
+* Run a command on SSH frontend 
+```
+$ open-a8-cli --verbose run-cmd "uname -a" --frontend
+[saclay.iot-lab.info]	Linux saclay 3.16.0-4-amd64 #1 SMP Debian 3.16.36-1+deb8u1 (2016-09-03) x86_64 GNU/Linux
+{
+    "run-cmd": {
+        "0": [
+            "saclay.iot-lab.info"
+        ]
+    }
+}
+```
+* Copy file on SSH frontend homedir directory (eg. ~/A8/.iotlabsshcli). This directory
+is mounting by A8 nodes during experiment.
+```
+$ open-a8-cli copy-file test.tar.gz 
+{
+    "run-cmd": {
+        "0": [
+            "saclay.iot-lab.info"
+        ]
+    }
+}
+$ open-a8-cli run-cmd "tar -xzvf ~/A8/.iotlabsshcli/test.tar.gz -C ~/A8/.iotlabsshcli/" --frontend
+{
+    "run-cmd": {
+        "0": [
+            "saclay.iot-lab.info"
+        ]
+    }
+}
+```
+* Run the script `/tmp/test.sh` on `node-a8-2` in saclay:
+```
+$ open-a8-cli run-script /tmp/test.sh -l saclay,a8,2
+{
+    "run-script": {
+        "0": [
+            "node-a8-2.saclay.iot-lab.info"
+        ]
+    }
+}
+```
+Note: a screen session is launched on the A8 node which
+startup script
+
+```
+root@node-a8-2:~# screen -ls
+There is a screen on:
+	1877.<login>-<exp_id>	(Detached)
+1 Socket in /tmp/screens/S-root.
+```
+Note: as run command you can pass --frontend option if you want to launch a script
+in background on the SSH frontend.
