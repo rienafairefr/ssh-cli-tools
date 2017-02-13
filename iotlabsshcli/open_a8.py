@@ -132,8 +132,35 @@ def run_cmd(config_ssh, nodes, cmd, verbose=False):
     return {"run-cmd": result}
 
 
-def run_script(config_ssh, nodes, script, verbose=False):
-    """Run a script in background on the A8 nodes."""
+def copy_file(config_ssh, nodes, file_path, verbose=False):
+    """ Copy a file on the A8 SSH frontend directory
+    (~/A8/.iotlabsshcli/)
+    """
+
+    # Configure ssh.
+    groups = _nodes_grouped(nodes)
+    ssh = OpenA8Ssh(config_ssh, groups, verbose=verbose)
+    remote_file = os.path.join('~/A8/.iotlabsshcli',
+                               os.path.basename(file_path))
+    try:
+        # Create file destination directory
+        ssh.run(_MKDIR_DST_CMD.format(os.path.dirname(remote_file)),
+                with_proxy=False)
+    except OpenA8SshAuthenticationException as exc:
+        print(exc.msg)
+        result = {"1": nodes}
+    else:
+        # Copy file on sites.
+        result = ssh.scp(file_path, remote_file)
+
+    return {"copy-file": result}
+
+
+def run_script(config_ssh, nodes, script, frontend,
+               verbose=False):
+    """Run a script in background on the A8 nodes
+    or on the SSH frontend
+    """
 
     # Configure ssh.
     groups = _nodes_grouped(nodes)

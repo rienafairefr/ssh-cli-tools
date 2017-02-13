@@ -85,6 +85,15 @@ def parse_options():
     # nodes list or exclude list
     common.add_nodes_selection_list(run_cmd_parser)
 
+    # copy-file parser
+    copy_file_parser = subparsers.add_parser('copy-file',
+                                             help='Copy file on'
+                                                  ' SSH frontend directory'
+                                                  ' (~/A8/.iotlabsshcli/)')
+    copy_file_parser.add_argument('file_path', help='File path')
+    # nodes list or exclude list
+    common.add_nodes_selection_list(copy_file_parser)
+
     parser.add_argument('--verbose',
                         action='store_true',
                         help='Set verbose output')
@@ -133,6 +142,10 @@ def open_a8_parse_and_run(opts):
         return iotlabsshcli.open_a8.run_cmd(config_ssh, nodes,
                                             opts.cmd,
                                             verbose=opts.verbose)
+    elif command == 'copy-file':
+        return iotlabsshcli.open_a8.copy_file(config_ssh, nodes,
+                                              opts.file_path,
+                                              verbose=opts.verbose)
     else:  # pragma: no cover
         raise ValueError('Unknown command {0}'.format(command))
 

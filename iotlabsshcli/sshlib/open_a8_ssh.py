@@ -140,6 +140,7 @@ class OpenA8Ssh(object):
 
     def scp(self, src, dst):
         """Copy file to hosts using Parallel SSH copy_file"""
+        result = {"0": [], "1": []}
         sites = ['{}.iot-lab.info'.format(site) for site in self.groups]
         for site in sites:
             try:
@@ -150,7 +151,8 @@ class OpenA8Ssh(object):
                 with SCPClient(ssh.client.get_transport()) as scp:
                     scp.put(src, dst)
                 ssh.client.close()
-        return
+                result["0"].append(site)
+        return _cleanup_result(result)
 
     def wait(self, max_wait):
         """Wait for requested A8 nodes until they boot"""

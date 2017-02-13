@@ -23,7 +23,7 @@
 
 import os.path
 from iotlabsshcli.open_a8 import reset_m3, flash_m3, wait_for_boot, run_script
-from iotlabsshcli.open_a8 import run_cmd
+from iotlabsshcli.open_a8 import run_cmd, copy_file
 from iotlabsshcli.open_a8 import (_RESET_M3_CMD, _UPDATE_M3_CMD,
                                   _MKDIR_DST_CMD, _RUN_SCRIPT_CMD,
                                   _QUIT_SCRIPT_CMD, _MAKE_EXECUTABLE_CMD)
@@ -139,8 +139,36 @@ def test_open_a8_run_script(scp, run):
 
     # Raise an exception
     run.side_effect = OpenA8SshAuthenticationException('test')
-    ret = run_script(config_ssh, _ROOT_NODES, script)
+    ret = run_script(config_ssh, _ROOT_NODES, script, False)
     assert ret == {'run-script': {'1': _ROOT_NODES}}
+
+
+@patch('iotlabsshcli.sshlib.OpenA8Ssh.run')
+@patch('iotlabsshcli.sshlib.OpenA8Ssh.scp')
+def test_open_a8_copy_file(scp, run):
+    """Test copy file on the SSH frontend."""
+    config_ssh = {
+        'user': 'username',
+        'exp_id': 123,
+    }
+    file_path = '/tmp/script.sh'
+    remote_file = os.path.join('~/A8/.iotlabsshcli',
+                               os.path.basename(file_path))
+    return_value = {'0': 'test'}
+    scp.return_value = return_value
+
+    ret = copy_file(config_ssh, _ROOT_NODES, file_path)
+
+    assert ret == {'copy-file': return_value}
+    scp.assert_called_once_with(file_path, remote_file)
+    assert run.call_count == 1
+    run.mock_calls[0].assert_called_with(
+        _MKDIR_DST_CMD.format(os.path.dirname(remote_file)))
+
+    # Raise an exception
+    run.side_effect = OpenA8SshAuthenticationException('test')
+    ret = copy_file(config_ssh, _ROOT_NODES, file_path)
+    assert ret == {'copy-file': {'1': _ROOT_NODES}}
 
 
 @patch('iotlabsshcli.sshlib.OpenA8Ssh.run')

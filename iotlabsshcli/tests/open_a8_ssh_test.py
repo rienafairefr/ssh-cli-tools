@@ -86,7 +86,7 @@ def test_scp(connect, client, put, _open):
     node_ssh = OpenA8Ssh(config_ssh, groups, verbose=True)
     ret = node_ssh.scp(src, dst)
 
-    assert ret is None
+    assert ret == {'0': ['saclay.iot-lab.info', 'grenoble.iot-lab.info']}
 
     # Simulating an exception
     connect.side_effect = AuthenticationException()
