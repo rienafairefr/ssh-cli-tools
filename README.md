@@ -11,8 +11,8 @@ The provided sub-commands are:
 
 | Sub-command  | Function |
 | ------------ | -------- |
-| `flash-m3`   | Flash the given firmware on the M3 MCU of the A8 node. |
-| `reset-m3`   | Reset the M3 node of the A8 node. |
+| `flash-m3`   | Flash the given firmware on the M3 MCU of A8 nodes |
+| `reset-m3`   | Reset the M3 node of A8 nodes |
 | `wait-for-boot`   | Block the execution until all given A8 nodes have booted or maximum wait time has expired |
 | `run-script`  | Run a given script in background (eg. screen session) on the given A8 nodes |
 | `run-cmd`   | Run a command on the given A8 nodes |
@@ -54,7 +54,7 @@ to configure your IoT-LAB SSH access in this
 
 ### Examples:
 
-* Start an experiment, wait for it ot be ready, wait for all A8 boot
+#### Start an experiment, wait for it ot be ready, wait for all A8 boot:
 ```
 $ experiment-cli submit -d 120 -l saclay,a8,1-10
 {
@@ -82,8 +82,9 @@ $ open-a8-cli wait-for-boot
     }
 }
 ```
-Note: node-a8-4 and node-a8-8 are broken in Saclay.
-* Flash a firmware on the M3 of the working nodes:
+<b>Note:</b> node-a8-4 and node-a8-8 are broken in Saclay.
+
+#### Flash a firmware on the M3 of the working node:
 ```
 $ open-a8-cli flash-m3 <firmware.elf> -l saclay,a8,2-3+5-7+9-10
 {
@@ -100,7 +101,8 @@ $ open-a8-cli flash-m3 <firmware.elf> -l saclay,a8,2-3+5-7+9-10
     }
 }
 ```
-* Reset the M3 of one A8 node:
+
+#### Reset the M3 of one A8 node:
 ```
 $ open-a8-cli reset-m3 -l saclay,a8,2
 {
@@ -111,7 +113,8 @@ $ open-a8-cli reset-m3 -l saclay,a8,2
     }
 }
 ```
-* Use the `--verbose` option to get the commands output:
+
+#### Use the `--verbose` option to get the commands output:
 ```
 $ open-a8-cli --verbose reset-m3 -l saclay,a8,2
 Connecting via SSH proxy saclay.iot-lab.info:22 -> node-a8-2.saclay.iot-lab.info:22
@@ -136,7 +139,7 @@ Connecting via SSH proxy saclay.iot-lab.info:22 -> node-a8-2.saclay.iot-lab.info
     }
 }
 ```
-* Run a command on A8 nodes
+#### Run a command on two A8 nodes:
 ```
 $ open-a8-cli --verbose run-cmd "uname -a" -l saclay,a8,2-3
 Connecting via SSH proxy saclay.iot-lab.info:22 -> node-a8-2.saclay.iot-lab.info:22
@@ -151,7 +154,7 @@ Connecting via SSH proxy saclay.iot-lab.info:22 -> node-a8-2.saclay.iot-lab.info
     }
 }
 ```
-* Run a command on SSH frontend 
+#### Run a command on SSH frontend: 
 ```
 $ open-a8-cli --verbose run-cmd "uname -a" --frontend
 [saclay.iot-lab.info]	Linux saclay 3.16.0-4-amd64 #1 SMP Debian 3.16.36-1+deb8u1 (2016-09-03) x86_64 GNU/Linux
@@ -163,8 +166,7 @@ $ open-a8-cli --verbose run-cmd "uname -a" --frontend
     }
 }
 ```
-* Copy file on SSH frontend homedir directory (eg. ~/A8/.iotlabsshcli). This directory
-is mounting by A8 nodes during experiment.
+#### Copy file on SSH frontend homedir directory (eg. ~/A8/.iotlabsshcli):
 ```
 $ open-a8-cli copy-file test.tar.gz 
 {
@@ -183,7 +185,9 @@ $ open-a8-cli run-cmd "tar -xzvf ~/A8/.iotlabsshcli/test.tar.gz -C ~/A8/.iotlabs
     }
 }
 ```
-* Run the script `/tmp/test.sh` on `node-a8-2` in saclay:
+<b>Note:</b> A8 homedir directory is mounting (eg. NFS) by A8 nodes during experiment.
+
+#### Run the script `/tmp/test.sh` on `node-a8-2` in saclay:
 ```
 $ open-a8-cli run-script /tmp/test.sh -l saclay,a8,2
 {
@@ -194,8 +198,7 @@ $ open-a8-cli run-script /tmp/test.sh -l saclay,a8,2
     }
 }
 ```
-Note: a screen session is launched on the A8 node which
-startup script
+<b>Note:</b> a screen session is launched on the A8 node which startup script
 
 ```
 root@node-a8-2:~# screen -ls
@@ -203,5 +206,5 @@ There is a screen on:
 	1877.<login>-<exp_id>	(Detached)
 1 Socket in /tmp/screens/S-root.
 ```
-Note: as run command you can pass --frontend option if you want to launch a script
+<b>Note:</b> as run command you can pass --frontend option if you want to launch a script
 in background on the SSH frontend.
