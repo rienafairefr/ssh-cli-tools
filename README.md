@@ -14,9 +14,9 @@ The provided sub-commands are:
 | `flash-m3`   | Flash the given firmware on the M3 MCU of A8 nodes |
 | `reset-m3`   | Reset the M3 node of A8 nodes |
 | `wait-for-boot`   | Block the execution until all given A8 nodes have booted or maximum wait time has expired |
-| `run-script`  | Run a given script in background (eg. screen session) on the given A8 nodes |
+| `run-script`  | Run a given script in background (screen session) on the given A8 nodes |
 | `run-cmd`   | Run a command on the given A8 nodes |
-| `copy-file`   | Copy a file on SSH frontend homedir directory (eg. ~/A8/.iotlabsshcli) |
+| `copy-file`   | Copy a file on SSH frontend homedir directory (~/A8/.iotlabsshcli) |
 
 SSH CLI Tools can be used in conjunction with the
 [IoT-Lab CLI Tools](https://github.com/iot-lab/cli-tools) commands like
@@ -46,7 +46,7 @@ $ sudo pip install .
 
 ### Requirements:
 
-Open A8 nodes are reachable through a gateway SSH server (eg. IoT-LAB SSH
+Open A8 nodes are reachable through a gateway SSH server (IoT-LAB SSH
 frontend). For this reason you must verify that your SSH public key used by
 ssh-cli-tools has been recorded in your IoT-LAB user profile. You can find how
 to configure your IoT-LAB SSH access in this
@@ -166,7 +166,7 @@ $ open-a8-cli --verbose run-cmd "uname -a" --frontend
     }
 }
 ```
-#### Copy file on SSH frontend homedir directory (eg. ~/A8/.iotlabsshcli):
+#### Copy file on SSH frontend homedir directory (~/A8/.iotlabsshcli):
 ```
 $ open-a8-cli copy-file test.tar.gz 
 {
@@ -185,7 +185,7 @@ $ open-a8-cli run-cmd "tar -xzvf ~/A8/.iotlabsshcli/test.tar.gz -C ~/A8/.iotlabs
     }
 }
 ```
-<b>Note:</b> A8 homedir directory is mounting (eg. NFS) by A8 nodes during experiment.
+<b>Note:</b> A8 homedir directory is mounted (via NFS) by A8 nodes during experiment.
 
 #### Run the script `/tmp/test.sh` on `node-a8-2` in saclay:
 ```
