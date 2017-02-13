@@ -47,20 +47,20 @@ def parse_options():
     # update-m3 parser
     update_parser = subparsers.add_parser('flash-m3',
                                           help='Flash the M3 firmware of A8 '
-                                               'node')
+                                               'nodes')
     update_parser.add_argument('firmware', help='firmware elf path.')
     # nodes list or exclude list
     common.add_nodes_selection_list(update_parser)
 
     # reset-m3 parser
     reset_parser = subparsers.add_parser('reset-m3',
-                                         help='Reset the M3 of A8 node')
+                                         help='Reset the M3 of A8 nodes')
     # nodes list or exclude list
     common.add_nodes_selection_list(reset_parser)
 
     # wait-for-boot parser
     boot_parser = subparsers.add_parser('wait-for-boot',
-                                        help='Waits until A8 node have boot')
+                                        help='Waits until A8 nodes have boot')
     boot_parser.add_argument('--max-wait',
                              type=int,
                              default=120,
@@ -72,7 +72,7 @@ def parse_options():
     # run-script parser
     run_script_parser = subparsers.add_parser('run-script',
                                               help='Run a script in background'
-                                                   ' on the A8 node')
+                                                   ' on A8 nodes')
     run_script_parser.add_argument('script', help='script path.')
     # nodes list or exclude list
     common.add_nodes_selection_list(run_script_parser)
