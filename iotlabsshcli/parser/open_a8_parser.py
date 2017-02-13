@@ -74,14 +74,17 @@ def parse_options():
                                               help='Run a script in background'
                                                    ' on A8 nodes')
     run_script_parser.add_argument('script', help='script path.')
+    run_script_parser.add_argument('--frontend', action='store_true',
+                                   help='Execution on SSH frontend')
     # nodes list or exclude list
     common.add_nodes_selection_list(run_script_parser)
 
     # run-cmd parser
     run_cmd_parser = subparsers.add_parser('run-cmd',
-                                           help='Run a command'
-                                                ' on the A8 node')
-    run_cmd_parser.add_argument('cmd', help='Command.')
+                                           help='Run a command on A8 nodes')
+    run_cmd_parser.add_argument('cmd', help='Command')
+    run_cmd_parser.add_argument('--frontend', action='store_true',
+                                help='Execution on SSH frontend')
     # nodes list or exclude list
     common.add_nodes_selection_list(run_cmd_parser)
 
@@ -137,10 +140,12 @@ def open_a8_parse_and_run(opts):
     elif command == 'run-script':
         return iotlabsshcli.open_a8.run_script(config_ssh, nodes,
                                                opts.script,
+                                               opts.frontend,
                                                verbose=opts.verbose)
     elif command == 'run-cmd':
         return iotlabsshcli.open_a8.run_cmd(config_ssh, nodes,
                                             opts.cmd,
+                                            opts.frontend,
                                             verbose=opts.verbose)
     elif command == 'copy-file':
         return iotlabsshcli.open_a8.copy_file(config_ssh, nodes,

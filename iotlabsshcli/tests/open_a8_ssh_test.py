@@ -51,7 +51,7 @@ def test_run(join, run_command):
 
     # Print output of run_command
     run_command.return_value = dict(
-        (node.split('.', 1)[0],
+        (node,
          {'stdout': ['test'], 'exit_code': 0})
         for node in _ROOT_NODES)
 

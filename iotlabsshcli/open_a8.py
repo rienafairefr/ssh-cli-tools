@@ -37,17 +37,18 @@ def _nodes_grouped(nodes):
     ...                 'node-a8-2.saclay.iot-lab.info',
     ...                 'node-a8-2.lille.iot-lab.info'])
     ... # doctest: +NORMALIZE_WHITESPACE
-    OrderedDict([('grenoble', ['node-a8-1', 'node-a8-2']),
-    ('saclay', ['node-a8-2']), ('lille', ['node-a8-2'])])
+    OrderedDict([('grenoble', ['node-a8-1.grenoble.iot-lab.info',
+                               'node-a8-2.grenoble.iot-lab.info']),
+                 ('saclay', ['node-a8-2.saclay.iot-lab.info']),
+                 ('lille', ['node-a8-2.lille.iot-lab.info'])])
     """
     result = OrderedDict()
     for host in nodes:
-        node = host.split('.')[0]
         site = host.split('.')[1]
         if site not in result:
-            result.update({site: [node]})
+            result.update({site: [host]})
         else:
-            result[site].append(node)
+            result[site].append(host)
 
     return result
 
@@ -69,7 +70,8 @@ def flash_m3(config_ssh, nodes, firmware, verbose=False):
 
     # Create firmware destination directory
     try:
-        ssh.run(_MKDIR_DST_CMD.format(os.path.dirname(remote_fw)))
+        ssh.run(_MKDIR_DST_CMD.format(os.path.dirname(remote_fw)),
+                with_proxy=False)
     except OpenA8SshAuthenticationException as exc:
         print(exc.msg)
         result = {"1": nodes}
@@ -117,14 +119,19 @@ def wait_for_boot(config_ssh, nodes, max_wait=120, verbose=False):
     return {"wait-for-boot": result}
 
 
-def run_cmd(config_ssh, nodes, cmd, verbose=False):
-    """ Run a command on the A8 nodes."""
+def run_cmd(config_ssh, nodes, cmd, frontend, verbose=False):
+    """ Run a command on the A8 nodes or on the
+    SSH frontend
+    """
 
     # Configure ssh.
     groups = _nodes_grouped(nodes)
     ssh = OpenA8Ssh(config_ssh, groups, verbose=verbose)
     try:
-        result = ssh.run(cmd)
+        if frontend:
+            result = ssh.run(cmd, with_proxy=False)
+        else:
+            result = ssh.run(cmd)
     except OpenA8SshAuthenticationException as exc:
         print(exc.msg)
         result = {"1": nodes}
@@ -171,10 +178,12 @@ def run_script(config_ssh, nodes, script, frontend,
                                  os.path.basename(script))
     script_data = {'screen': screen,
                    'path': remote_script}
+    with_proxy = False
 
     try:
         # Create destination directory
-        ssh.run(_MKDIR_DST_CMD.format(os.path.dirname(remote_script)))
+        ssh.run(_MKDIR_DST_CMD.format(os.path.dirname(remote_script)),
+                with_proxy=with_proxy)
     except OpenA8SshAuthenticationException as exc:
         print(exc.msg)
         result = {"1": nodes}
@@ -183,13 +192,18 @@ def run_script(config_ssh, nodes, script, frontend,
         ssh.scp(script, remote_script)
 
         # Make script executable
-        ssh.run(_MAKE_EXECUTABLE_CMD.format(remote_script))
+        ssh.run(_MAKE_EXECUTABLE_CMD.format(remote_script),
+                with_proxy=with_proxy)
+
+        if not frontend:
+            with_proxy = True
 
         # Kill any running script
-        ssh.run(_QUIT_SCRIPT_CMD.format(**script_data))
+        ssh.run(_QUIT_SCRIPT_CMD.format(**script_data),
+                with_proxy=with_proxy)
 
-        # Run script on all nodes
+        # Run script
         result = ssh.run(_RUN_SCRIPT_CMD.format(**script_data),
-                         use_pty=False)
+                         with_proxy=with_proxy, use_pty=False)
 
     return {"run-script": result}

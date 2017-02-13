@@ -137,7 +137,15 @@ class TestMainNodeParser(MainMock):
         list_nodes.assert_called_with(self.api, 123, [self._nodes], None)
         run_script.assert_called_with({'user': 'username', 'exp_id': 123},
                                       self._root_nodes,
-                                      'script.sh', verbose=False)
+                                      'script.sh', False, verbose=False)
+
+        args = ['run-script', 'script.sh', '--frontend', '-l',
+                'saclay,a8,1-5']
+        open_a8_parser.main(args)
+        list_nodes.assert_called_with(self.api, 123, [self._nodes], None)
+        run_script.assert_called_with({'user': 'username', 'exp_id': 123},
+                                      self._root_nodes,
+                                      'script.sh', True, verbose=False)
 
         exp_info_res = {"items": [{"network_address": node}
                                   for node in self._nodes]}
@@ -149,7 +157,7 @@ class TestMainNodeParser(MainMock):
             list_nodes.assert_called_with(self.api, 123, None, None)
             run_script.assert_called_with({'user': 'username', 'exp_id': 123},
                                           self._root_nodes,
-                                          'script.sh', verbose=False)
+                                          'script.sh', False, verbose=False)
 
     @patch('iotlabsshcli.open_a8.run_cmd')
     @patch('iotlabcli.parser.common.list_nodes')
@@ -163,7 +171,14 @@ class TestMainNodeParser(MainMock):
         list_nodes.assert_called_with(self.api, 123, [self._nodes], None)
         run_cmd.assert_called_with({'user': 'username', 'exp_id': 123},
                                    self._root_nodes,
-                                   'uname -a', verbose=False)
+                                   'uname -a', False, verbose=False)
+
+        args = ['run-cmd', 'uname -a', '--frontend', '-l', 'saclay,a8,1-5']
+        open_a8_parser.main(args)
+        list_nodes.assert_called_with(self.api, 123, [self._nodes], None)
+        run_cmd.assert_called_with({'user': 'username', 'exp_id': 123},
+                                   self._root_nodes,
+                                   'uname -a', True, verbose=False)
 
         exp_info_res = {"items": [{"network_address": node}
                                   for node in self._nodes]}
