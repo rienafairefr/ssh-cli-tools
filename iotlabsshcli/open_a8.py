@@ -140,7 +140,7 @@ def run_cmd(config_ssh, nodes, cmd, frontend=False, verbose=False):
 
 
 def copy_file(config_ssh, nodes, file_path, verbose=False):
-    """ Copy a file on the A8 SSH frontend directory
+    """ Copy a file on the A8 SSH frontend(s) directory(es)
     (~/A8/.iotlabsshcli/)
     """
 
