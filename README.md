@@ -198,7 +198,9 @@ $ open-a8-cli run-script /tmp/test.sh -l saclay,a8,2
     }
 }
 ```
-<b>Note:</b> a screen session is launched on the A8 node which startup script
+<b>Note:</b> a screen session is launched on the A8 node
+to actually run the script and provide easy access to outputs if needed.
+When the script ends, the screen session is terminated and the logs are gone.
 
 ```
 root@node-a8-2:~# screen -ls
