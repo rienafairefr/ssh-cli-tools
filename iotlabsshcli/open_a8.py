@@ -119,7 +119,7 @@ def wait_for_boot(config_ssh, nodes, max_wait=120, verbose=False):
     return {"wait-for-boot": result}
 
 
-def run_cmd(config_ssh, nodes, cmd, frontend, verbose=False):
+def run_cmd(config_ssh, nodes, cmd, frontend=False, verbose=False):
     """ Run a command on the A8 nodes or on the
     SSH frontend
     """
@@ -163,7 +163,7 @@ def copy_file(config_ssh, nodes, file_path, verbose=False):
     return {"copy-file": result}
 
 
-def run_script(config_ssh, nodes, script, frontend,
+def run_script(config_ssh, nodes, script, frontend=False,
                verbose=False):
     """Run a script in background on the A8 nodes
     or on the SSH frontend
