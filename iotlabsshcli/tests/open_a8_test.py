@@ -122,7 +122,7 @@ def test_open_a8_run_script(scp, run):
     return_value = {'0': 'test'}
     run.return_value = return_value
 
-    ret = run_script(config_ssh, _ROOT_NODES, script, False)
+    ret = run_script(config_ssh, _ROOT_NODES, script)
 
     assert ret == {'run-script': return_value}
     scp.assert_called_once_with(script, remote_script)
@@ -139,7 +139,7 @@ def test_open_a8_run_script(scp, run):
 
     # Raise an exception
     run.side_effect = OpenA8SshAuthenticationException('test')
-    ret = run_script(config_ssh, _ROOT_NODES, script, False)
+    ret = run_script(config_ssh, _ROOT_NODES, script)
     assert ret == {'run-script': {'1': _ROOT_NODES}}
 
 
