@@ -119,7 +119,7 @@ def wait_for_boot(config_ssh, nodes, max_wait=120, verbose=False):
     return {"wait-for-boot": result}
 
 
-def run_cmd(config_ssh, nodes, cmd, frontend=False, verbose=False):
+def run_cmd(config_ssh, nodes, cmd, run_on_frontend=False, verbose=False):
     """ Run a command on the A8 nodes or on the
     SSH frontend
     """
@@ -128,7 +128,7 @@ def run_cmd(config_ssh, nodes, cmd, frontend=False, verbose=False):
     groups = _nodes_grouped(nodes)
     ssh = OpenA8Ssh(config_ssh, groups, verbose=verbose)
     try:
-        if frontend:
+        if run_on_frontend:
             result = ssh.run(cmd, with_proxy=False)
         else:
             result = ssh.run(cmd)
@@ -163,7 +163,7 @@ def copy_file(config_ssh, nodes, file_path, verbose=False):
     return {"copy-file": result}
 
 
-def run_script(config_ssh, nodes, script, frontend=False,
+def run_script(config_ssh, nodes, script, run_on_frontend=False,
                verbose=False):
     """Run a script in background on the A8 nodes
     or on the SSH frontend
@@ -195,7 +195,7 @@ def run_script(config_ssh, nodes, script, frontend=False,
         ssh.run(_MAKE_EXECUTABLE_CMD.format(remote_script),
                 with_proxy=with_proxy)
 
-        if not frontend:
+        if not run_on_frontend:
             with_proxy = True
 
         # Kill any running script
