@@ -21,20 +21,12 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 
+from __future__ import print_function
 import sys
 import time
 from pssh import ParallelSSHClient, SSHClient, utils
 from pssh.exceptions import AuthenticationException, ConnectionErrorException
 from scp import SCPClient
-
-
-def _node_fqdn(node, site):
-    """Return the fully qualifed domain name of a node.
-
-    >>> _node_fqdn("node-a8-1", "saclay")
-    'node-a8-1.saclay.iot-lab.info'
-    """
-    return '{}.{}.iot-lab.info'.format(node, site)
 
 
 def _cleanup_result(result):
@@ -62,15 +54,17 @@ def _cleanup_result(result):
 def _nodes_from_groups(group):
     """Return the full node list from nodes grouped by sites.
 
-    >>> _nodes_from_groups({'saclay': ['node-a8-1', 'node-a8-2'],
-    ...                     'grenoble': ['node-a8-10', 'node-a8-11']})
+    >>> _nodes_from_groups({'saclay': ['node-a8-1.saclay.iot-lab.info',
+    ...                                'node-a8-2.saclay.iot-lab.info'],
+    ...                     'grenoble': ['node-a8-10.grenoble.iot-lab.info',
+    ...                                  'node-a8-11.grenoble.iot-lab.info']})
     ['node-a8-10.grenoble.iot-lab.info', 'node-a8-11.grenoble.iot-lab.info', \
 'node-a8-1.saclay.iot-lab.info', 'node-a8-2.saclay.iot-lab.info']
     """
     result = []
-    for site, nodes in sorted(group.items()):
+    for _, nodes in sorted(group.items()):
         for node in nodes:
-            result.append(_node_fqdn(node, site))
+            result.append(node)
 
     return result
 
@@ -114,32 +108,39 @@ class OpenA8Ssh(object):
         if self.verbose:
             utils.enable_logger(utils.logger)
 
-    def run(self, command, **kwargs):
+    def run(self, command, with_proxy=True, **kwargs):
         """Run ssh command using Parallel SSH."""
         result = {"0": [], "1": []}
         for site in self.groups:
-            client = ParallelSSHClient(self.groups[site],
-                                       user='root',
-                                       proxy_host='{}'
-                                                  '.iot-lab.info'.format(site),
-                                       proxy_user=self.config_ssh['user'])
+            if with_proxy:
+                hosts = self.groups[site]
+                proxy_host = '{}.iot-lab.info'.format(site)
+                client = ParallelSSHClient(hosts,
+                                           user='root',
+                                           proxy_host=proxy_host,
+                                           proxy_user=self.config_ssh['user'])
+            else:
+                hosts = ['{}.iot-lab.info'.format(site)]
+                client = ParallelSSHClient(hosts,
+                                           user=self.config_ssh['user'])
             try:
                 output = client.run_command(command, **kwargs)
                 client.join(output)
             except AuthenticationException:
                 raise OpenA8SshAuthenticationException(site)
             else:
-                for host in self.groups[site]:
-                    result['1' if output[host]['exit_code'] else '0'].append(
-                        '{}.{}.iot-lab.info'.format(host, site))
+                for host in hosts:
+                    result['1' if output[host]['exit_code']
+                           else '0'].append(host)
                 if self.verbose:
-                    for host in self.groups[site]:
+                    for host in hosts:
                         for _ in output[host]['stdout']:
                             pass
         return _cleanup_result(result)
 
     def scp(self, src, dst):
         """Copy file to hosts using Parallel SSH copy_file"""
+        result = {"0": [], "1": []}
         sites = ['{}.iot-lab.info'.format(site) for site in self.groups]
         for site in sites:
             try:
@@ -150,7 +151,8 @@ class OpenA8Ssh(object):
                 with SCPClient(ssh.client.get_transport()) as scp:
                     scp.put(src, dst)
                 ssh.client.close()
-        return
+                result["0"].append(site)
+        return _cleanup_result(result)
 
     def wait(self, max_wait):
         """Wait for requested A8 nodes until they boot"""
@@ -162,10 +164,10 @@ class OpenA8Ssh(object):
                not _check_all_nodes_processed(whole_nodes, result)):
             for site, nodes in sorted(self.groups.items()):
                 for node in nodes:
-                    if _node_fqdn(node, site) in result["0"]:
+                    if node in result["0"]:
                         continue
                     if self._try_connection(node, site):
-                        result["0"].append(_node_fqdn(node, site))
+                        result["0"].append(node)
             time.sleep(2)
         for node in whole_nodes:
             if node not in result["0"]:
@@ -185,13 +187,11 @@ class OpenA8Ssh(object):
             raise OpenA8SshAuthenticationException(site)
         except ConnectionErrorException:
             if self.verbose:
-                print("Node {} not ready."
-                      .format(_node_fqdn(node, site)))
+                print("Node {} not ready.".format(node))
         else:
             client.client.close()
             if self.verbose:
-                print("Node {} ready."
-                      .format(_node_fqdn(node, site)))
+                print("Node {} ready.".format(node))
             result = True
         finally:
             dev_null.close()

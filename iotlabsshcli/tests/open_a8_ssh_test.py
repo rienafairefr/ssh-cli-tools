@@ -29,8 +29,9 @@ from iotlabsshcli.sshlib import OpenA8Ssh, OpenA8SshAuthenticationException
 from iotlabsshcli.sshlib.open_a8_ssh import _nodes_from_groups
 from .compat import patch
 
+_SITES = ['saclay', 'grenoble']
 _NODES = ['a8-{}.{}.iot-lab.info'.format(n, s)
-          for n in range(1, 6) for s in ['saclay', 'grenoble']]
+          for n in range(1, 6) for s in _SITES]
 _ROOT_NODES = ['node-{}'.format(node) for node in _NODES]
 
 
@@ -51,11 +52,43 @@ def test_run(join, run_command):
 
     # Print output of run_command
     run_command.return_value = dict(
-        (node.split('.', 1)[0],
+        (node,
          {'stdout': ['test'], 'exit_code': 0})
         for node in _ROOT_NODES)
 
     node_ssh.run(test_command)
+
+    run_command.call_count = len(_ROOT_NODES)
+    run_command.assert_called_with(test_command)
+
+    # Raise an exception
+    run_command.side_effect = AuthenticationException()
+    with raises(OpenA8SshAuthenticationException):
+        node_ssh.run(test_command)
+
+
+@patch('pssh.ParallelSSHClient.run_command')
+@patch('pssh.ParallelSSHClient.join')
+def test_run_on_frontend(join, run_command):
+    # pylint: disable=unused-argument
+    """Test running commands on ssh nodes."""
+    config_ssh = {
+        'user': 'username',
+        'exp_id': 123,
+    }
+
+    test_command = 'test'
+    groups = _nodes_grouped(_ROOT_NODES)
+
+    node_ssh = OpenA8Ssh(config_ssh, groups, verbose=True)
+
+    # Print output of run_command
+    run_command.return_value = dict(
+        ("{}.iot-lab.info".format(site),
+         {'stdout': ['test'], 'exit_code': 0})
+        for site in _SITES)
+
+    node_ssh.run(test_command, with_proxy=False)
 
     run_command.call_count = len(_ROOT_NODES)
     run_command.assert_called_with(test_command)
@@ -86,7 +119,7 @@ def test_scp(connect, client, put, _open):
     node_ssh = OpenA8Ssh(config_ssh, groups, verbose=True)
     ret = node_ssh.scp(src, dst)
 
-    assert ret is None
+    assert ret == {'0': ['saclay.iot-lab.info', 'grenoble.iot-lab.info']}
 
     # Simulating an exception
     connect.side_effect = AuthenticationException()

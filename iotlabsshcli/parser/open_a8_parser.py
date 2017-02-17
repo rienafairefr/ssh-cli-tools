@@ -47,36 +47,55 @@ def parse_options():
     # update-m3 parser
     update_parser = subparsers.add_parser('flash-m3',
                                           help='Flash the M3 firmware of A8 '
-                                               'node')
+                                               'nodes')
     update_parser.add_argument('firmware', help='firmware elf path.')
     # nodes list or exclude list
     common.add_nodes_selection_list(update_parser)
 
     # reset-m3 parser
     reset_parser = subparsers.add_parser('reset-m3',
-                                         help='reset the M3 of A8 node')
+                                         help='Reset the M3 of A8 nodes')
     # nodes list or exclude list
     common.add_nodes_selection_list(reset_parser)
 
     # wait-for-boot parser
     boot_parser = subparsers.add_parser('wait-for-boot',
-                                        help='Waits until A8 node have boot')
+                                        help='Waits until A8 nodes have boot')
     boot_parser.add_argument('--max-wait',
                              type=int,
                              default=120,
                              help='Maximum waiting delay for A8 nodes boot '
                                   '(in seconds)')
+    # nodes list or exclude list
+    common.add_nodes_selection_list(boot_parser)
 
     # run-script parser
     run_script_parser = subparsers.add_parser('run-script',
                                               help='Run a script in background'
-                                                   'on the A8 node')
+                                                   ' on A8 nodes')
     run_script_parser.add_argument('script', help='script path.')
+    run_script_parser.add_argument('--frontend', action='store_true',
+                                   help='Execution on SSH frontend')
     # nodes list or exclude list
     common.add_nodes_selection_list(run_script_parser)
 
+    # run-cmd parser
+    run_cmd_parser = subparsers.add_parser('run-cmd',
+                                           help='Run a command on A8 nodes')
+    run_cmd_parser.add_argument('cmd', help='Command')
+    run_cmd_parser.add_argument('--frontend', action='store_true',
+                                help='Execution on SSH frontend')
     # nodes list or exclude list
-    common.add_nodes_selection_list(boot_parser)
+    common.add_nodes_selection_list(run_cmd_parser)
+
+    # copy-file parser
+    copy_file_parser = subparsers.add_parser('copy-file',
+                                             help='Copy file on'
+                                                  ' SSH frontend directory'
+                                                  ' (~/A8/.iotlabsshcli/)')
+    copy_file_parser.add_argument('file_path', help='File path')
+    # nodes list or exclude list
+    common.add_nodes_selection_list(copy_file_parser)
 
     parser.add_argument('--verbose',
                         action='store_true',
@@ -121,7 +140,17 @@ def open_a8_parse_and_run(opts):
     elif command == 'run-script':
         return iotlabsshcli.open_a8.run_script(config_ssh, nodes,
                                                opts.script,
+                                               opts.frontend,
                                                verbose=opts.verbose)
+    elif command == 'run-cmd':
+        return iotlabsshcli.open_a8.run_cmd(config_ssh, nodes,
+                                            opts.cmd,
+                                            opts.frontend,
+                                            verbose=opts.verbose)
+    elif command == 'copy-file':
+        return iotlabsshcli.open_a8.copy_file(config_ssh, nodes,
+                                              opts.file_path,
+                                              verbose=opts.verbose)
     else:  # pragma: no cover
         raise ValueError('Unknown command {0}'.format(command))
 
