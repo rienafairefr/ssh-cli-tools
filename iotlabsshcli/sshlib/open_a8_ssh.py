@@ -22,7 +22,6 @@
 
 
 from __future__ import print_function
-import sys
 import time
 from pssh import ParallelSSHClient, SSHClient, utils
 from pssh.exceptions import AuthenticationException, ConnectionErrorException
@@ -51,40 +50,62 @@ def _cleanup_result(result):
     return result
 
 
-def _nodes_from_groups(group):
-    """Return the full node list from nodes grouped by sites.
+def _extend_result(result, new_result):
+    """ Extend result dictionnary values with new result
+    dictionnary values
 
-    >>> _nodes_from_groups({'saclay': ['node-a8-1.saclay.iot-lab.info',
-    ...                                'node-a8-2.saclay.iot-lab.info'],
-    ...                     'grenoble': ['node-a8-10.grenoble.iot-lab.info',
-    ...                                  'node-a8-11.grenoble.iot-lab.info']})
-    ['node-a8-10.grenoble.iot-lab.info', 'node-a8-11.grenoble.iot-lab.info', \
-'node-a8-1.saclay.iot-lab.info', 'node-a8-2.saclay.iot-lab.info']
+    >>> sorted(_extend_result(
+    ...    { '0': [], '1': []}, { '0': [], '1': []}).items())
+    [('0', []), ('1', [])]
+    >>> sorted(_extend_result(
+    ...    { '0': [], '1': []},
+    ...    { '0': ['node-a8-1.saclay.iot-lab.info'], '1': []}).items())
+    [('0', ['node-a8-1.saclay.iot-lab.info']), ('1', [])]
+    >>> sorted(_extend_result(
+    ...    { '0': ['node-a8-1.saclay.iot-lab.info'], '1': []},
+    ...    { '0': ['node-a8-2.saclay.iot-lab.info'],
+    ...      '1': ['node-a8-3.saclay.iot-lab.info']}).items())
+    [('0', ['node-a8-1.saclay.iot-lab.info', \
+'node-a8-2.saclay.iot-lab.info']), ('1', ['node-a8-3.saclay.iot-lab.info'])]
+    >>> sorted(_extend_result(
+    ...    { '0': ['node-a8-1.saclay.iot-lab.info',
+    ...      'node-a8-2.saclay.iot-lab.info'],
+    ...      '1': ['node-a8-3.saclay.iot-lab.info']},
+    ...    { '0': [], '1': ['node-a8-3.saclay.iot-lab.info']}).items())
+    [('0', ['node-a8-1.saclay.iot-lab.info', \
+'node-a8-2.saclay.iot-lab.info']), ('1', ['node-a8-3.saclay.iot-lab.info'])]
+    >>> sorted(_extend_result(
+    ...    { '0': ['node-a8-1.saclay.iot-lab.info',
+    ...      'node-a8-2.saclay.iot-lab.info'],
+    ...      '1': ['node-a8-3.saclay.iot-lab.info']},
+    ...    { '0': ['node-a8-3.saclay.iot-lab.info'], '1': []}).items())
+    [('0', ['node-a8-1.saclay.iot-lab.info', 'node-a8-2.saclay.iot-lab.info', \
+'node-a8-3.saclay.iot-lab.info']), ('1', [])]
     """
-    result = []
-    for _, nodes in sorted(group.items()):
-        for node in nodes:
-            result.append(node)
-
+    result["0"] = sorted(list(set(result["0"] + new_result["0"])))
+    result["1"] = sorted(list(set(result["1"]) - set(new_result["0"])))
+    result["1"] = sorted(list(set(result["1"]) | set(new_result["1"])))
     return result
 
 
-def _check_all_nodes_processed(nodes, result):
+def _check_all_nodes_processed(result):
     """Verify all nodes are successful or failed.
 
-    >>> _check_all_nodes_processed([1, 2, 3, 4], { '0': [1, 2], '1': [3, 4]})
+    >>> _check_all_nodes_processed({ 'saclay': [], 'grenoble': []})
+    True
+    >>> _check_all_nodes_processed(
+    ...    { 'saclay': ['node-a8-1.saclay.iot-lab.info'],
+    ...      'grenoble': []})
     False
-    >>> _check_all_nodes_processed([1, 2, 3, 4], { '0': [1, 2, 3, 4], '1': []})
-    True
-    >>> _check_all_nodes_processed([1, 2, 3, 4], { '0': [], '1': [1, 2, 3, 4]})
-    True
-    >>> _check_all_nodes_processed([1, 2, 3, 4], { '0': [], '1': []})
+    >>> _check_all_nodes_processed(
+    ...    { 'saclay': ['node-a8-1.saclay.iot-lab.info'],
+    ...      'grenoble': ['node-a8-10.grenoble.iot-lab.info']})
     False
-    >>> _check_all_nodes_processed([], { '0': [], '1': []})
-    True
     """
-    return (sorted(nodes) == sorted(result["0"]) or
-            sorted(nodes) == sorted(result["1"]))
+    for nodes in result.values():
+        if nodes:
+            return False
+    return True
 
 
 class OpenA8SshAuthenticationException(Exception):
@@ -111,35 +132,21 @@ class OpenA8Ssh(object):
     def run(self, command, with_proxy=True, **kwargs):
         """Run ssh command using Parallel SSH."""
         result = {"0": [], "1": []}
-        for site in self.groups:
-            if with_proxy:
-                hosts = self.groups[site]
-                proxy_host = '{}.iot-lab.info'.format(site)
-                client = ParallelSSHClient(hosts,
-                                           user='root',
-                                           proxy_host=proxy_host,
-                                           proxy_user=self.config_ssh['user'])
-            else:
-                hosts = ['{}.iot-lab.info'.format(site)]
-                client = ParallelSSHClient(hosts,
-                                           user=self.config_ssh['user'])
-            try:
-                output = client.run_command(command, **kwargs)
-                client.join(output)
-            except AuthenticationException:
-                raise OpenA8SshAuthenticationException(site)
-            else:
-                for host in hosts:
-                    result['1' if output[host]['exit_code']
-                           else '0'].append(host)
-                if self.verbose:
-                    for host in hosts:
-                        for _ in output[host]['stdout']:
-                            pass
+        for site, hosts in self.groups.items():
+            proxy_host = '{}.iot-lab.info'.format(site) if with_proxy else None
+            hosts = hosts if with_proxy else ['{}.iot-lab.info'.format(site)]
+            result_cmd = self.run_command(command,
+                                          hosts=hosts,
+                                          user=self.config_ssh['user'],
+                                          verbose=self.verbose,
+                                          proxy_host=proxy_host,
+                                          **kwargs)
+            result = _extend_result(result, result_cmd)
+
         return _cleanup_result(result)
 
     def scp(self, src, dst):
-        """Copy file to hosts using Parallel SSH copy_file"""
+        """Copy file to  using Parallel SSH copy_file"""
         result = {"0": [], "1": []}
         sites = ['{}.iot-lab.info'.format(site) for site in self.groups]
         for site in sites:
@@ -147,6 +154,8 @@ class OpenA8Ssh(object):
                 ssh = SSHClient(site, user=self.config_ssh['user'])
             except AuthenticationException:
                 raise OpenA8SshAuthenticationException(site)
+            except ConnectionErrorException:
+                result["1"].append(site)
             else:
                 with SCPClient(ssh.client.get_transport()) as scp:
                     scp.put(src, dst)
@@ -157,43 +166,55 @@ class OpenA8Ssh(object):
     def wait(self, max_wait):
         """Wait for requested A8 nodes until they boot"""
         result = {"0": [], "1": []}
-        whole_nodes = _nodes_from_groups(self.groups)
-
         start_time = time.time()
+        groups = self.groups.copy()
         while (start_time + max_wait > time.time() and
-               not _check_all_nodes_processed(whole_nodes, result)):
-            for site, nodes in sorted(self.groups.items()):
-                for node in nodes:
-                    if node in result["0"]:
-                        continue
-                    if self._try_connection(node, site):
-                        result["0"].append(node)
-            time.sleep(2)
-        for node in whole_nodes:
-            if node not in result["0"]:
-                result["1"].append(node)
+               not _check_all_nodes_processed(groups)):
+            for site, hosts in groups.copy().items():
+                proxy_host = '{}.iot-lab.info'.format(site)
+                result_cmd = self.run_command("uptime",
+                                              hosts=hosts,
+                                              user=self.config_ssh['user'],
+                                              verbose=self.verbose,
+                                              proxy_host=proxy_host)
+                groups[site] = result_cmd["1"]
+                groups = _cleanup_result(groups)
+                result = _extend_result(result, result_cmd)
 
         return _cleanup_result(result)
 
-    def _try_connection(self, node, site):
-        dev_null = sys.stderr = open('/dev/null', 'w')
-        result = False
-        try:
-            client = SSHClient(node, user='root',
-                               proxy_host='{}.iot-lab.info'
-                               .format(site),
-                               proxy_user=self.config_ssh['user'])
-        except AuthenticationException:
-            raise OpenA8SshAuthenticationException(site)
-        except ConnectionErrorException:
-            if self.verbose:
-                print("Node {} not ready.".format(node))
+    @staticmethod
+    def run_command(command, hosts, user, verbose=False, proxy_host=None,
+                    **kwargs):
+        """Run ssh command using Parallel SSH."""
+        result = {"0": [], "1": []}
+        if proxy_host:
+            client = ParallelSSHClient(hosts,
+                                       user='root',
+                                       proxy_host=proxy_host,
+                                       proxy_user=user)
         else:
-            client.client.close()
-            if self.verbose:
-                print("Node {} ready.".format(node))
-            result = True
-        finally:
-            dev_null.close()
+            client = ParallelSSHClient(hosts,
+                                       user=user)
+        output = client.run_command(command, stop_on_errors=False,
+                                    **kwargs)
+        client.join(output)
+        for host in hosts:
+            if host not in output:
+                # Pssh AuthenticationException duplicate output dict key
+                # {'saclay.iot-lab.info': {'exception': ...},
+                # {'saclay.iot-lab.info_qzhtyxlt': {'exception': ...}}
+                site = next(iter(sorted(output)))
+                raise OpenA8SshAuthenticationException(site)
+            result['0' if output[host]['exit_code'] == 0
+                   else '1'].append(host)
+        if verbose:
+            for host in hosts:
+                # Pssh >= 1.0.0: stdout is None instead of generator object
+                # when you have ConnectionErrorException
+                stdout = output[host].get('stdout')
+                if stdout:
+                    for _ in stdout:
+                        pass
 
         return result

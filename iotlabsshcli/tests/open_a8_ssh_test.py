@@ -21,18 +21,34 @@
 
 """Tests for iotlabsshcli.open_a8 package."""
 
-from pssh.exceptions import AuthenticationException, ConnectionErrorException
 from pytest import raises, mark
+from pssh.exceptions import AuthenticationException, ConnectionErrorException
 
 from iotlabsshcli.open_a8 import _nodes_grouped
 from iotlabsshcli.sshlib import OpenA8Ssh, OpenA8SshAuthenticationException
-from iotlabsshcli.sshlib.open_a8_ssh import _nodes_from_groups
 from .compat import patch
 
 _SITES = ['saclay', 'grenoble']
 _NODES = ['a8-{}.{}.iot-lab.info'.format(n, s)
           for n in range(1, 6) for s in _SITES]
 _ROOT_NODES = ['node-{}'.format(node) for node in _NODES]
+
+
+def _nodes_from_groups(group):
+    """Return the full node list from nodes grouped by sites.
+    >>> _nodes_from_groups({'saclay': ['node-a8-1.saclay.iot-lab.info',
+    ...                                'node-a8-2.saclay.iot-lab.info'],
+    ...                     'grenoble': ['node-a8-10.grenoble.iot-lab.info',
+    ...                                  'node-a8-11.grenoble.iot-lab.info']})
+    ['node-a8-10.grenoble.iot-lab.info', 'node-a8-11.grenoble.iot-lab.info', \
+'node-a8-1.saclay.iot-lab.info', 'node-a8-2.saclay.iot-lab.info']
+    """
+    result = []
+    for _, nodes in sorted(group.items()):
+        for host in nodes:
+            result.append(host)
+
+    return result
 
 
 @mark.parametrize('run_on_frontend', [False, True])
@@ -65,12 +81,8 @@ def test_run(join, run_command, run_on_frontend):
 
     node_ssh.run(test_command, with_proxy=not run_on_frontend)
     assert run_command.call_count == len(groups)
-    run_command.assert_called_with(test_command)
-
-    # Raise an exception
-    run_command.side_effect = AuthenticationException()
-    with raises(OpenA8SshAuthenticationException):
-        node_ssh.run(test_command)
+    run_command.assert_called_with(test_command,
+                                   stop_on_errors=False)
 
 
 @patch('scp.SCPClient._open')
@@ -95,6 +107,12 @@ def test_scp(connect, client, put, _open):
 
     assert ret == {'0': ['saclay.iot-lab.info', 'grenoble.iot-lab.info']}
 
+    # pylint: disable=R0204
+    connect.side_effect = ConnectionErrorException()
+    ret = node_ssh.scp(src, dst)
+
+    assert ret == {'1': ['saclay.iot-lab.info', 'grenoble.iot-lab.info']}
+
     # Simulating an exception
     connect.side_effect = AuthenticationException()
 
@@ -102,88 +120,31 @@ def test_scp(connect, client, put, _open):
         node_ssh.scp(src, dst)
 
 
-@patch('pssh.SSHClient')
-@patch('pssh.SSHClient._connect_tunnel')
-def test_wait_all_boot(connect, client, capsys):
+@patch('pssh.ParallelSSHClient.run_command')
+@patch('pssh.ParallelSSHClient.join')
+def test_wait_all_boot(join, run_command):
     # pylint: disable=unused-argument
     """Test wait for ssh nodes to be available."""
     config_ssh = {
         'user': 'username',
         'exp_id': 123,
     }
+
+    test_command = 'test'
     groups = _nodes_grouped(_ROOT_NODES)
 
     # normal boot
     node_ssh = OpenA8Ssh(config_ssh, groups, verbose=True)
-    ret = node_ssh.wait(120)
-    out, _ = capsys.readouterr()
 
-    assert len(out.split('\n')) == len(_ROOT_NODES) + 1
+    # Print output of run_command
+    run_command.return_value = dict(
+        (node,
+         {'stdout': ['test'], 'exit_code': 0})
+        for node in _ROOT_NODES)
 
-    assert ret == {'0': _nodes_from_groups(groups)}
-    assert '1' not in ret.keys()
+    node_ssh.wait(120)
+    node_ssh.run(test_command)
 
-
-@patch('pssh.SSHClient')
-@patch('pssh.SSHClient._connect_tunnel')
-def test_wait_authentication_exc(connect, client, capsys):
-    # pylint: disable=unused-argument
-    """Test wait for ssh nodes to be available."""
-    config_ssh = {
-        'user': 'username',
-        'exp_id': 123,
-    }
-    groups = _nodes_grouped(_ROOT_NODES)
-
-    node_ssh = OpenA8Ssh(config_ssh, groups, verbose=True)
-    # Simulating an authentication exception
-    connect.side_effect = AuthenticationException()
-
-    with raises(OpenA8SshAuthenticationException):
-        node_ssh.wait(120)
-
-
-@patch('pssh.SSHClient')
-@patch('pssh.SSHClient._connect_tunnel')
-def test_wait_grenoble_not_boot(connect, client):
-    # pylint: disable=unused-argument
-    """Test wait for ssh nodes to be available."""
-    config_ssh = {
-        'user': 'username',
-        'exp_id': 123,
-    }
-    groups = _nodes_grouped(_ROOT_NODES)
-
-    test_try_connection = (lambda node, site: (True if site == "saclay"
-                                               else False))
-    # all grenoble nodes failing
-    node_ssh = OpenA8Ssh(config_ssh, groups, verbose=True)
-    with patch.object(node_ssh, '_try_connection', new=test_try_connection):
-        ret = node_ssh.wait(4)  # 2 loops of 2 seconds required
-        assert ret['0'] == ['node-a8-{}.saclay.iot-lab.info'.format(idx)
-                            for idx in range(1, 6)]
-        assert ret['1'] == ['node-a8-{}.grenoble.iot-lab.info'.format(idx)
-                            for idx in range(1, 6)]
-
-
-@patch('pssh.SSHClient')
-@patch('pssh.SSHClient._connect_tunnel')
-def test_wait_all_not_boot(connect, client, capsys):
-    # pylint: disable=unused-argument
-    """Test wait for ssh nodes to be available."""
-    config_ssh = {
-        'user': 'username',
-        'exp_id': 123,
-    }
-    groups = _nodes_grouped(_ROOT_NODES)
-
-    # all nodes failing
-    connect.side_effect = ConnectionErrorException()
-    node_ssh = OpenA8Ssh(config_ssh, groups, verbose=True)
-    ret = node_ssh.wait(2)
-    out, _ = capsys.readouterr()
-
-    assert len(out.split('\n')) == len(_ROOT_NODES) + 1
-
-    assert ret == {'1': _nodes_from_groups(groups)}
-    assert '0' not in ret.keys()
+    run_command.call_count = len(_ROOT_NODES)
+    run_command.assert_called_with(test_command,
+                                   stop_on_errors=False)
