@@ -148,3 +148,35 @@ def test_wait_all_boot(join, run_command):
     run_command.call_count = len(_ROOT_NODES)
     run_command.assert_called_with(test_command,
                                    stop_on_errors=False)
+
+
+@patch('pssh.ParallelSSHClient.run_command')
+@patch('pssh.ParallelSSHClient.join')
+def test_authentication_exception(join, run_command):
+    # pylint: disable=unused-argument
+    """Test SSH authentication exception with parallel-ssh
+    run_command and stop_on_errors=False option.
+    """
+    config_ssh = {
+        'user': 'username',
+        'exp_id': 123,
+    }
+
+    test_command = 'test'
+    groups = _nodes_grouped(_ROOT_NODES)
+
+    # normal boot
+    node_ssh = OpenA8Ssh(config_ssh, groups, verbose=True)
+
+    # Print output of run_command
+    run_command.return_value = dict(
+        ("{}.iot-lab.info".format(site),
+         {'stdout': None, 'exit_code': None})
+        for site in _SITES)
+
+    with raises(OpenA8SshAuthenticationException):
+        node_ssh.run(test_command)
+
+    run_command.call_count = len(_ROOT_NODES)
+    run_command.assert_called_with(test_command,
+                                   stop_on_errors=False)
