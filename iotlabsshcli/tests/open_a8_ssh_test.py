@@ -64,8 +64,7 @@ def test_run(join, run_command, run_on_frontend):
 
     node_ssh.run(test_command, with_proxy=not run_on_frontend)
     assert run_command.call_count == len(groups)
-    run_command.assert_called_with(test_command,
-                                   stop_on_errors=False)
+    run_command.assert_called_with(test_command, stop_on_errors=False)
 
 
 @patch('scp.SCPClient._open')

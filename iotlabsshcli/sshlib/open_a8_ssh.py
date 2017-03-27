@@ -199,13 +199,11 @@ class OpenA8Ssh(object):
         """Run ssh command using Parallel SSH."""
         result = {"0": [], "1": []}
         if proxy_host:
-            client = ParallelSSHClient(hosts,
-                                       user='root',
+            client = ParallelSSHClient(hosts, user='root',
                                        proxy_host=proxy_host,
                                        proxy_user=user)
         else:
-            client = ParallelSSHClient(hosts,
-                                       user=user)
+            client = ParallelSSHClient(hosts, user=user)
         output = client.run_command(command, stop_on_errors=False,
                                     **kwargs)
         client.join(output)
