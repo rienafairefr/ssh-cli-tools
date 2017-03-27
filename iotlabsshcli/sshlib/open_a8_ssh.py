@@ -54,33 +54,46 @@ def _extend_result(result, new_result):
     """ Extend result dictionnary values with new result
     dictionnary values
 
-    >>> sorted(_extend_result(
-    ...    { '0': [], '1': []}, { '0': [], '1': []}).items())
-    [('0', []), ('1', [])]
-    >>> sorted(_extend_result(
-    ...    { '0': [], '1': []},
-    ...    { '0': ['node-a8-1.saclay.iot-lab.info'], '1': []}).items())
-    [('0', ['node-a8-1.saclay.iot-lab.info']), ('1', [])]
-    >>> sorted(_extend_result(
+    >>> result = {'0': [], '1': []}
+    >>> result == _extend_result(
+    ...    { '0': [], '1': []}, { '0': [], '1': []})
+    True
+
+    >>> result = {'0': ['node-a8-1.saclay.iot-lab.info'],
+    ...           '1': []}
+    >>> result == _extend_result({ '0': [], '1': []},
+    ...    { '0': ['node-a8-1.saclay.iot-lab.info'], '1': []})
+    True
+
+    >>> result = {'0': ['node-a8-1.saclay.iot-lab.info',
+    ...                 'node-a8-2.saclay.iot-lab.info'],
+    ...           '1': ['node-a8-3.saclay.iot-lab.info']}
+    >>> result == _extend_result(
     ...    { '0': ['node-a8-1.saclay.iot-lab.info'], '1': []},
     ...    { '0': ['node-a8-2.saclay.iot-lab.info'],
-    ...      '1': ['node-a8-3.saclay.iot-lab.info']}).items())
-    [('0', ['node-a8-1.saclay.iot-lab.info', \
-'node-a8-2.saclay.iot-lab.info']), ('1', ['node-a8-3.saclay.iot-lab.info'])]
-    >>> sorted(_extend_result(
+    ...      '1': ['node-a8-3.saclay.iot-lab.info']})
+    True
+
+    >>> result = {'0': ['node-a8-1.saclay.iot-lab.info',
+    ...                 'node-a8-2.saclay.iot-lab.info'],
+    ...           '1': ['node-a8-3.saclay.iot-lab.info']}
+    >>> result ==_extend_result(
     ...    { '0': ['node-a8-1.saclay.iot-lab.info',
-    ...      'node-a8-2.saclay.iot-lab.info'],
+    ...            'node-a8-2.saclay.iot-lab.info'],
     ...      '1': ['node-a8-3.saclay.iot-lab.info']},
-    ...    { '0': [], '1': ['node-a8-3.saclay.iot-lab.info']}).items())
-    [('0', ['node-a8-1.saclay.iot-lab.info', \
-'node-a8-2.saclay.iot-lab.info']), ('1', ['node-a8-3.saclay.iot-lab.info'])]
-    >>> sorted(_extend_result(
+    ...    { '0': [], '1': ['node-a8-3.saclay.iot-lab.info']})
+    True
+
+    >>> result =  {'0': ['node-a8-1.saclay.iot-lab.info',
+    ...                  'node-a8-2.saclay.iot-lab.info',
+    ...                  'node-a8-3.saclay.iot-lab.info'],
+    ...            '1': []}
+    >>> result == _extend_result(
     ...    { '0': ['node-a8-1.saclay.iot-lab.info',
-    ...      'node-a8-2.saclay.iot-lab.info'],
+    ...            'node-a8-2.saclay.iot-lab.info'],
     ...      '1': ['node-a8-3.saclay.iot-lab.info']},
-    ...    { '0': ['node-a8-3.saclay.iot-lab.info'], '1': []}).items())
-    [('0', ['node-a8-1.saclay.iot-lab.info', 'node-a8-2.saclay.iot-lab.info', \
-'node-a8-3.saclay.iot-lab.info']), ('1', [])]
+    ...    { '0': ['node-a8-3.saclay.iot-lab.info'], '1': []})
+    True
     """
     result["0"] = sorted(list(set(result["0"] + new_result["0"])))
     result["1"] = sorted(list(set(result["1"]) - set(new_result["0"])))
@@ -102,10 +115,7 @@ def _check_all_nodes_processed(result):
     ...      'grenoble': ['node-a8-10.grenoble.iot-lab.info']})
     False
     """
-    for nodes in result.values():
-        if nodes:
-            return False
-    return True
+    return not any(result.values())
 
 
 class OpenA8SshAuthenticationException(Exception):

@@ -34,23 +34,6 @@ _NODES = ['a8-{}.{}.iot-lab.info'.format(n, s)
 _ROOT_NODES = ['node-{}'.format(node) for node in _NODES]
 
 
-def _nodes_from_groups(group):
-    """Return the full node list from nodes grouped by sites.
-    >>> _nodes_from_groups({'saclay': ['node-a8-1.saclay.iot-lab.info',
-    ...                                'node-a8-2.saclay.iot-lab.info'],
-    ...                     'grenoble': ['node-a8-10.grenoble.iot-lab.info',
-    ...                                  'node-a8-11.grenoble.iot-lab.info']})
-    ['node-a8-10.grenoble.iot-lab.info', 'node-a8-11.grenoble.iot-lab.info', \
-'node-a8-1.saclay.iot-lab.info', 'node-a8-2.saclay.iot-lab.info']
-    """
-    result = []
-    for _, nodes in sorted(group.items()):
-        for host in nodes:
-            result.append(host)
-
-    return result
-
-
 @mark.parametrize('run_on_frontend', [False, True])
 @patch('pssh.ParallelSSHClient.run_command')
 @patch('pssh.ParallelSSHClient.join')
@@ -107,13 +90,13 @@ def test_scp(connect, client, put, _open):
 
     assert ret == {'0': ['saclay.iot-lab.info', 'grenoble.iot-lab.info']}
 
-    # pylint: disable=R0204
     connect.side_effect = ConnectionErrorException()
     ret = node_ssh.scp(src, dst)
 
     assert ret == {'1': ['saclay.iot-lab.info', 'grenoble.iot-lab.info']}
 
     # Simulating an exception
+    # pylint: disable=redefined-variable-type
     connect.side_effect = AuthenticationException()
 
     with raises(OpenA8SshAuthenticationException):
@@ -143,11 +126,13 @@ def test_wait_all_boot(join, run_command):
         for node in _ROOT_NODES)
 
     node_ssh.wait(120)
-    node_ssh.run(test_command)
+    assert run_command.call_count == len(_SITES)
+    run_command.assert_called_with('uptime', stop_on_errors=False)
+    run_command.reset_mock()
 
-    run_command.call_count = len(_ROOT_NODES)
-    run_command.assert_called_with(test_command,
-                                   stop_on_errors=False)
+    node_ssh.run(test_command)
+    assert run_command.call_count == len(_SITES)
+    run_command.assert_called_with(test_command, stop_on_errors=False)
 
 
 @patch('pssh.ParallelSSHClient.run_command')
@@ -177,6 +162,6 @@ def test_authentication_exception(join, run_command):
     with raises(OpenA8SshAuthenticationException):
         node_ssh.run(test_command)
 
-    run_command.call_count = len(_ROOT_NODES)
-    run_command.assert_called_with(test_command,
-                                   stop_on_errors=False)
+    # only one iteration as there is an exception
+    assert run_command.call_count == 1
+    run_command.assert_called_with(test_command, stop_on_errors=False)
