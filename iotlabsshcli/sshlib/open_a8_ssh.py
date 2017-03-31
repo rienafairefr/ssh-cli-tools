@@ -161,7 +161,7 @@ class OpenA8Ssh(object):
         sites = ['{}.iot-lab.info'.format(site) for site in self.groups]
         for site in sites:
             try:
-                ssh = SSHClient(site, user=self.config_ssh['user'])
+                ssh = SSHClient(site, user=self.config_ssh['user'], timeout=10)
             except AuthenticationException:
                 raise OpenA8SshAuthenticationException(site)
             except ConnectionErrorException:
@@ -193,17 +193,19 @@ class OpenA8Ssh(object):
 
         return _cleanup_result(result)
 
+    # pylint: disable=too-many-arguments
     @staticmethod
     def run_command(command, hosts, user, verbose=False, proxy_host=None,
-                    **kwargs):
+                    timeout=10, **kwargs):
         """Run ssh command using Parallel SSH."""
         result = {"0": [], "1": []}
         if proxy_host:
             client = ParallelSSHClient(hosts, user='root',
                                        proxy_host=proxy_host,
-                                       proxy_user=user)
+                                       proxy_user=user,
+                                       timeout=timeout)
         else:
-            client = ParallelSSHClient(hosts, user=user)
+            client = ParallelSSHClient(hosts, user=user, timeout=timeout)
         output = client.run_command(command, stop_on_errors=False,
                                     **kwargs)
         client.join(output)
