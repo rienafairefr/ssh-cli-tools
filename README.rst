@@ -1,3 +1,4 @@
+
 SSH CLI Tools
 =============
 
@@ -12,16 +13,16 @@ of `open-a8-cli`.
 
 The provided sub-commands are:
 
-================== ========
-Sub-command        Function
-================== ========
-**flash-m3**       Flash the given firmware on the M3 MCU of A8 nodes
-**reset-m3**       Reset the M3 node of A8 nodes
-**wait-for-boot**  Block the execution until all given A8 nodes have booted or maximum wait time has expired
-**run-script**     Run a given script in background (screen session) on the given A8 nodes
-**run-cmd**        Run a command on the given A8 nodes
-**copy-file**      Copy a file on SSH frontend homedir directory (*~/A8/.iotlabsshcli*)
-================== =======
+=================== ==========================================================================================
+ Sub-command        Function
+=================== ==========================================================================================
+ **flash-m3**        Flash the given firmware on the M3 MCU of A8 nodes
+ **reset-m3**        Reset the M3 node of A8 nodes
+ **wait-for-boot**   Block the execution until all given A8 nodes have booted or maximum wait time has expired
+ **run-script**      Run a given script in background (screen session) on the given A8 nodes
+ **run-cmd**         Run a command on the given A8 nodes
+ **copy-file**       Copy a file on SSH frontend homedir directory (*~/A8/.iotlabsshcli*)
+=================== ==========================================================================================
 
 **SSH CLI Tools** can be used in conjunction with the
 `IoT-Lab CLI Tools <https://github.com/iot-lab/cli-tools>`_ commands like
