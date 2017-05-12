@@ -42,7 +42,7 @@ def _cleanup_result(result):
     """
     key_to_del = []
     for key, value in result.items():
-        if len(value) == 0:
+        if value == []:
             key_to_del.append(key)
     for key in key_to_del:
         del result[key]
