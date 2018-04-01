@@ -194,7 +194,7 @@ Copy file on SSH frontend homedir directory (~/A8/.iotlabsshcli):
             ]
         }
     }
-    $ open-a8-cli run-cmd "tar -xzvf ~/A8/.iotlabsshcli/test.tar.gz -C ~/A8/.iotlabsshcli/" --frontend
+    $ iotlab-ssh run-cmd "tar -xzvf ~/A8/.iotlabsshcli/test.tar.gz -C ~/A8/.iotlabsshcli/" --frontend
     {
         "run-cmd": {
             "0": [
