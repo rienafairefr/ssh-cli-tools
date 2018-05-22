@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.2.3
+-----
+
++ Force parallel-ssh to 1.5.5 because of a breaking refactoring introduced in
+  1.6.0
+
 0.2.2
 -----
 
