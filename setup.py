@@ -67,6 +67,11 @@ setup(
     download_url='http://github.com/iot-lab/ssh-cli-tools/',
     packages=find_packages(),
     scripts=SCRIPTS,
+    entry_points={
+        'iotlab.commands': [
+            'ssh=iotlabsshcli.parser.open_a8_parser:main',
+        ],
+    },
     classifiers=['Development Status :: 4 - Beta',
                  'Programming Language :: Python',
                  'Programming Language :: Python :: 2.7',
