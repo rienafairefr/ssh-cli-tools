@@ -67,3 +67,5 @@ Session.vim
 .netrwhist
 *~
 cover/
+
+\.idea/
